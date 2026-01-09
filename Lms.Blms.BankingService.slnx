@@ -1,0 +1,7 @@
+﻿<Solution>
+  <Folder Name="/src/" />
+  <Folder Name="/tests/">
+    <Project Path="tests\BankingService.Tests.csproj" Type="Classic C#" />
+  </Folder>
+  <Project Path="src\BankingServiceProject\BankingServiceProject.csproj" Type="Classic C#" />
+</Solution>

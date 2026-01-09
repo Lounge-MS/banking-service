@@ -4,7 +4,7 @@
         <ImplicitUsings>disable</ImplicitUsings>
         <Nullable>enable</Nullable>
     </PropertyGroup>
-
+    
     <PropertyGroup>
         <AnalysisLevel>latest</AnalysisLevel>
         <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
@@ -12,14 +12,14 @@
         <CodeAnalysisTreatWarningsAsErrors>true</CodeAnalysisTreatWarningsAsErrors>
         <AnalysisMode>All</AnalysisMode>
     </PropertyGroup>
-
+    
     <ItemGroup>
         <PackageReference Include="StyleCop.Analyzers">
             <PrivateAssets>all</PrivateAssets>
             <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
         </PackageReference>
     </ItemGroup>
-
+    
     <ItemGroup>
         <PackageReference Include="SourceKit.Analyzers.Collections"/>
         <PackageReference Include="SourceKit.Analyzers.Enumerable"/>
@@ -27,13 +27,12 @@
         <PackageReference Include="SourceKit.Analyzers.Nullable"/>
         <PackageReference Include="SourceKit.Analyzers.Properties"/>
     </ItemGroup>
-
+    
     <ItemGroup>
         <PackageReference Include="Itmo.Dev.Editorconfig"/>
     </ItemGroup>
-
+    
     <ItemGroup>
         <InternalsVisibleTo Include="$(AssemblyName).Tests"/>
     </ItemGroup>
-
 </Project>
