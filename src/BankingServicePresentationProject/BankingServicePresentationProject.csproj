@@ -2,7 +2,7 @@
     <PropertyGroup>
         <TargetFramework>net9.0</TargetFramework>
         <Nullable>enable</Nullable>
-        <RootNamespace>BankingServiceProject.PresentationLayerProject</RootNamespace>
+        <RootNamespace>BankingServiceProject.PresentationProject</RootNamespace>
     </PropertyGroup>
     <ItemGroup>
         <PackageReference Include="Grpc.Tools">
