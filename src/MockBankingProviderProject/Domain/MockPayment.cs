@@ -6,23 +6,16 @@ public record MockPayment
 
     public decimal Amount { get; init; }
 
-    public Uri ConfirmationUrl { get; init; }
-
-    public Uri CancellationUrl { get; init; }
-
-    public string IdentityToken { get; init; }
-
     public MockPaymentStatus Status { get; set; } = MockPaymentStatus.Created;
 
-    public MockPayment(
-        decimal amount,
-        Uri confirmationUrl,
-        Uri cancellationUrl,
-        string identityToken)
+    public MockPayment(decimal amount)
     {
         Amount = amount;
-        ConfirmationUrl = confirmationUrl;
-        CancellationUrl = cancellationUrl;
-        IdentityToken = identityToken;
+    }
+
+    public static MockPayment FromStartPaymentRequest(
+        StartPaymentRequest request)
+    {
+        return new MockPayment(request.Amount);
     }
 }
