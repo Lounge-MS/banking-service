@@ -5,4 +5,5 @@
   </Folder>
   <Project Path="src\BankingServicePresentationLayerProject\BankingServicePresentationLayerProject.csproj" Type="Classic C#" />
   <Project Path="src\BankingServiceProject\BankingServiceProject.csproj" Type="Classic C#" />
+  <Project Path="src\BankingServiceRepositoryProject\BankingServiceRepositoryProject.csproj" Type="Classic C#" />
 </Solution>

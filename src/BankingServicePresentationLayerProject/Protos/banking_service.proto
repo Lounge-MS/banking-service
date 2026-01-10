@@ -1,0 +1,55 @@
+syntax = "proto3";
+
+package lms.blms.banking_service.v1;
+
+service BankingService {
+  rpc Compensate(CompensateResponse) returns (CompensateRequest);
+  rpc CancelPayment(CancelPaymentResponse) returns (CancelPaymentRequest);
+  rpc StartPayment(StartPaymentResponse) returns (StartPaymentRequest);
+  rpc GetPaymentStatus(GetPaymentStatusResponse) returns (GetPaymentStatusRequest);
+}
+
+message CompensateResponse {}
+
+message CompensateRequest {
+  string payment_id = 1;
+}
+
+message CancelPaymentResponse {}
+
+message CancelPaymentRequest {
+  string payment_id = 1;
+}
+
+message StartPaymentResponse {
+  string payment_id = 1;
+  string payment_url = 2;
+}
+
+enum BankingProvider {
+  BANKING_PROVIDER_UNSPECIFIED = 0;
+  BANKING_PROVIDER_MOCK = 1;
+}
+
+message StartPaymentRequest {
+  string idempotency_key = 1;
+  float amount = 2;
+  BankingProvider banking_provider = 3;
+}
+
+enum PaymentStatus {
+  PAYMENT_STATUS_UNSPECIFIED = 0;
+  PAYMENT_STATUS_STARTED = 1;
+  PAYMENT_STATUS_COMPLETED = 2;
+  PAYMENT_STATUS_CANCELLED = 3;
+  PAYMENT_STATUS_COMPENSATING = 4;
+  PAYMENT_STATUS_COMPENSATED = 5;
+}
+
+message GetPaymentStatusResponse {
+  PaymentStatus status = 1;
+}
+
+message GetPaymentStatusRequest {
+  string payment_id = 1;
+}
