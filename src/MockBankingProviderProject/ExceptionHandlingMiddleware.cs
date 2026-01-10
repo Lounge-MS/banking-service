@@ -29,8 +29,8 @@ public class ExceptionHandlingMiddleware
     {
         (HttpStatusCode code, string message) = ex switch
         {
-            PaymentNotFoundException => (HttpStatusCode.NotFound, "Payment not found"),
-            IllegalStateException => (HttpStatusCode.BadRequest, "Amount is invalid"),
+            PaymentNotFoundException => (HttpStatusCode.NotFound, ex.Message),
+            IllegalStateException => (HttpStatusCode.BadRequest, ex.Message),
             _ => (HttpStatusCode.InternalServerError, "Internal server error"),
         };
 

@@ -23,7 +23,7 @@ public class MockBankingProvider
         _clientFactory = httpClientFactory;
     }
 
-    public ValueTask StartPayment(
+    public ValueTask<MockPayment> StartPayment(
         StartPaymentRequest request,
         CancellationToken cancellationToken = default)
     {
@@ -41,7 +41,7 @@ public class MockBankingProvider
             _ = ExecutePayment(payment.Id, cancellationToken);
         }
 
-        return ValueTask.CompletedTask;
+        return new ValueTask<MockPayment>(payment);
     }
 
     public async Task<string> ConfirmPayment(
@@ -66,10 +66,17 @@ public class MockBankingProvider
         MockPayment payment =
             _payments.GetValueOrDefault(request.PaymentId) ?? throw new PaymentNotFoundException();
 
+        if (payment.Status != MockPaymentStatus.Approved)
+        {
+            throw new IllegalStateException();
+        }
+
         var rollbackPayment = new RollbackPayment(
             payment,
             new Uri(request.ConfirmationUrl),
             request.IdentityToken);
+
+        _rollbackPayments[payment.Id] = rollbackPayment;
 
         _ = ExecuteRollback(
             payment.Id,

@@ -16,8 +16,7 @@ public class MockBankingController : ControllerBase
     [HttpPost("start")]
     public async Task<IActionResult> StartPayment([FromBody] StartPaymentRequest request)
     {
-        await _provider.StartPayment(request);
-        return Ok();
+        return new OkObjectResult(await _provider.StartPayment(request));
     }
 
     [HttpPost("rollback")]
