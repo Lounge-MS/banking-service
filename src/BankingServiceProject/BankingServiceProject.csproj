@@ -4,4 +4,7 @@
         <Nullable>enable</Nullable>
         <RootNamespace>BankingServiceProject</RootNamespace>
     </PropertyGroup>
+    <ItemGroup>
+        <ProjectReference Include="../BankingServiceRepositoryProject/BankingServiceRepositoryProject.csproj" />
+    </ItemGroup>
 </Project>

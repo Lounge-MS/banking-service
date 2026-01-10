@@ -13,11 +13,27 @@ public class OperationsRepository
         _dataSource = dataSource;
     }
 
+    public async Task<OperationEntity> GetOperation(
+        string id,
+        CancellationToken cancellationToken)
+    {
+        NpgsqlCommand command = _dataSource.CreateCommand();
+        const string sql =
+            """
+            SELECT * FROM operations
+            WHERE id = :id;
+            """;
+        command.CommandText = sql;
+        command.Parameters.AddWithValue("id", id);
+        await using NpgsqlDataReader reader = await command.ExecuteReaderAsync(cancellationToken);
+        return OperationEntity.FromReader(reader);
+    }
+
     public async Task<OperationEntity> CreateOperation(
         string idempotencyKey,
         string? externalId,
         Uri paymentUrl,
-        float amount,
+        decimal amount,
         BankingProvider bankingProvider,
         CancellationToken cancellationToken)
     {
@@ -63,5 +79,24 @@ public class OperationsRepository
                     throw;
             }
         }
+    }
+
+    public async Task UpdateStatus(
+        string id,
+        OperationStatus status)
+    {
+        NpgsqlCommand command = _dataSource.CreateCommand();
+        const string sql =
+            """
+            UPDATE TABLE operations
+            SET status = :status
+            WHERE id = :id;
+            """;
+        command.CommandText = sql;
+
+        command.Parameters.AddWithValue("id", id);
+        command.Parameters.AddWithValue("status", status.ToDbValue());
+
+        await command.ExecuteNonQueryAsync();
     }
 }
