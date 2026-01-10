@@ -1,6 +1,8 @@
+using BankingServiceProject.Clients.Dto;
 using BankingServiceProject.Dto;
 using BankingServiceProject.RepositoryProject.Domain;
 using BankingServiceProject.RepositoryProject.Repositories;
+using System.Text.Json;
 
 namespace BankingServiceProject;
 
@@ -25,6 +27,7 @@ public class BankingService
         OperationEntity operation = await _operationsRepository.CreateOperation(
             idempotencyKey,
             null,
+            JsonSerializer.SerializeToDocument(new MockBankingProviderMetainfo([], [])),
             new Uri(string.Empty),
             amount,
             bankingProvider,

@@ -23,7 +23,7 @@ public class MockBankingProvider
         _clientFactory = httpClientFactory;
     }
 
-    public ValueTask<MockPayment> StartPayment(
+    public ValueTask<StartPaymentResponse> StartPayment(
         StartPaymentRequest request,
         CancellationToken cancellationToken = default)
     {
@@ -41,7 +41,8 @@ public class MockBankingProvider
             _ = ExecutePayment(payment.Id, cancellationToken);
         }
 
-        return new ValueTask<MockPayment>(payment);
+        return new ValueTask<StartPaymentResponse>(
+            StartPaymentResponse.FromPayment(payment));
     }
 
     public async Task<string> ConfirmPayment(
@@ -61,15 +62,14 @@ public class MockBankingProvider
 
     public void StartRollback(
         StartRollbackRequest request,
+        string externalIdentityToken,
         CancellationToken cancellationToken = default)
     {
         MockPayment payment =
             _payments.GetValueOrDefault(request.PaymentId) ?? throw new PaymentNotFoundException();
+        payment.ValidateToken(externalIdentityToken);
 
-        if (payment.Status != MockPaymentStatus.Approved)
-        {
-            throw new IllegalStateException();
-        }
+        payment.ValidateState(MockPaymentStatus.Approved);
 
         var rollbackPayment = new RollbackPayment(
             payment,
@@ -116,7 +116,7 @@ public class MockBankingProvider
         rollbackPayment.Payment.Status = MockPaymentStatus.Rollback;
         await SendWebhook(
             rollbackPayment.ConfirmationUrl,
-            rollbackPayment.IdentityToken,
+            rollbackPayment.ExternalIdentityToken,
             new FinishedRollbackWebhookRequest(
                 rollbackPayment.Payment.Id,
                 FinishedRollbackStatus.Approved),
@@ -129,7 +129,7 @@ public class MockBankingProvider
     {
         await SendWebhook(
             rollbackPayment.ConfirmationUrl,
-            rollbackPayment.IdentityToken,
+            rollbackPayment.ExternalIdentityToken,
             new FinishedRollbackWebhookRequest(
                 rollbackPayment.Payment.Id,
                 FinishedRollbackStatus.Declined),
@@ -171,7 +171,7 @@ public class MockBankingProvider
         processingPayment.Payment.Status = MockPaymentStatus.Approved;
         await SendWebhook(
             processingPayment.ConfirmationUrl,
-            processingPayment.IdentityToken,
+            processingPayment.ExternalIdentityToken,
             new FinishedPaymentWebhookRequest(
                 processingPayment.Payment.Id,
                 FinishedPaymentStatus.Approved),
@@ -185,7 +185,7 @@ public class MockBankingProvider
         processingPayment.Payment.Status = MockPaymentStatus.Declined;
         await SendWebhook(
             processingPayment.ConfirmationUrl,
-            processingPayment.IdentityToken,
+            processingPayment.ExternalIdentityToken,
             new FinishedPaymentWebhookRequest(
                 processingPayment.Payment.Id,
                 FinishedPaymentStatus.Declined),

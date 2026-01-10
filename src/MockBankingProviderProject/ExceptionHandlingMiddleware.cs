@@ -31,6 +31,7 @@ public class ExceptionHandlingMiddleware
         {
             PaymentNotFoundException => (HttpStatusCode.NotFound, ex.Message),
             IllegalStateException => (HttpStatusCode.BadRequest, ex.Message),
+            InvalidIdentityTokenException => (HttpStatusCode.Forbidden, ex.Message),
             _ => (HttpStatusCode.InternalServerError, "Internal server error"),
         };
 

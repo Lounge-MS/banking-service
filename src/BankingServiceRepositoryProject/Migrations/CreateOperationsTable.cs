@@ -14,6 +14,7 @@ public class CreateOperationsTable : Migration
                 id VARCHAR(36) PRIMARY KEY,
                 idempotency_key VARCHAR(36) UNIQUE NOT NULL,
                 external_id VARCHAR(64),
+                metainfo JSONB NOT NULL DEFAULT '{}',
                 payment_url VARCHAR(255) NOT NULL,
                 amount DECIMAL(10,2) NOT NULL CHECK (amount > 0),
                 status varchar(32) DEFAULT 'CREATED',

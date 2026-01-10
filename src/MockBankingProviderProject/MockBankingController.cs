@@ -1,5 +1,7 @@
 using BankingServiceProject.MockBankingProviderProject.Domain;
+using BankingServiceProject.MockBankingProviderProject.Exceptions;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Primitives;
 
 namespace BankingServiceProject.MockBankingProviderProject;
 
@@ -14,15 +16,23 @@ public class MockBankingController : ControllerBase
     }
 
     [HttpPost("start")]
-    public async Task<IActionResult> StartPayment([FromBody] StartPaymentRequest request)
+    public async Task<IActionResult> StartPayment(
+        [FromBody] StartPaymentRequest request)
     {
         return new OkObjectResult(await _provider.StartPayment(request));
     }
 
     [HttpPost("rollback")]
-    public IActionResult RollbackPayment([FromBody] StartRollbackRequest request)
+    public IActionResult RollbackPayment(
+        [FromBody] StartRollbackRequest request)
     {
-        _provider.StartRollback(request);
+        if (!Request.Headers.TryGetValue("X-Identity-Token", out StringValues externalIdentityToken) ||
+            string.IsNullOrWhiteSpace(externalIdentityToken))
+        {
+            throw new InvalidIdentityTokenException();
+        }
+
+        _provider.StartRollback(request, externalIdentityToken.ToString());
         return Ok();
     }
 

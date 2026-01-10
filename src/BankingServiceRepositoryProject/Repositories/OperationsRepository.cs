@@ -1,6 +1,8 @@
 using BankingServiceProject.RepositoryProject.Domain;
 using BankingServiceProject.RepositoryProject.Exceptions;
 using Npgsql;
+using NpgsqlTypes;
+using System.Text.Json;
 
 namespace BankingServiceProject.RepositoryProject.Repositories;
 
@@ -32,6 +34,7 @@ public class OperationsRepository
     public async Task<OperationEntity> CreateOperation(
         string idempotencyKey,
         string? externalId,
+        JsonDocument metainfo,
         Uri paymentUrl,
         decimal amount,
         BankingProvider bankingProvider,
@@ -43,12 +46,12 @@ public class OperationsRepository
             """
             INSERT INTO operations
             (
-                id, idempotency_key, external_id,
+                id, idempotency_key, external_id, metainfo,
                 payment_url, amount, banking_provider
             )
             VALUES
             (
-                :id, :idempotency_key, :external_id,
+                :id, :idempotency_key, :external_id, :metainfo,
                 :payment_url, :amount, :banking_provider
             )
             RETURNING *;
@@ -58,6 +61,7 @@ public class OperationsRepository
         command.Parameters.AddWithValue("id", id);
         command.Parameters.AddWithValue("idempotency_key", idempotencyKey);
         command.Parameters.AddWithNullableValue("external_id", externalId);
+        command.Parameters.AddWithValue("metainfo", NpgsqlDbType.Jsonb, metainfo);
         command.Parameters.AddWithValue("payment_url", paymentUrl.ToString());
         command.Parameters.AddWithValue("amount", amount);
         command.Parameters.AddWithValue("banking_provider", bankingProvider.ToDbValue());

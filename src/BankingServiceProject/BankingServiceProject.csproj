@@ -7,4 +7,7 @@
     <ItemGroup>
         <ProjectReference Include="../BankingServiceRepositoryProject/BankingServiceRepositoryProject.csproj" />
     </ItemGroup>
+    <ItemGroup>
+      <PackageReference Include="Refit" />
+    </ItemGroup>
 </Project>

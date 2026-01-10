@@ -6,15 +6,15 @@ public record RollbackPayment
 
     public Uri ConfirmationUrl { get; init; }
 
-    public string IdentityToken { get; init; }
+    public string ExternalIdentityToken { get; init; }
 
     public RollbackPayment(
         MockPayment payment,
         Uri confirmationUrl,
-        string identityToken)
+        string externalIdentityToken)
     {
         Payment = payment;
         ConfirmationUrl = confirmationUrl;
-        IdentityToken = identityToken;
+        ExternalIdentityToken = externalIdentityToken;
     }
 }

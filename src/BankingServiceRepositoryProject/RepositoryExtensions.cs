@@ -9,17 +9,16 @@ public static class RepositoryExtensions
         return e.ToString().ToUpperInvariant();
     }
 
-    public static string? GetNullableString(this NpgsqlDataReader reader, string column)
+    public static string? GetNullableString(this NpgsqlDataReader reader, int ordinal)
     {
-        int ordinal = reader.GetOrdinal(column);
         return reader.IsDBNull(ordinal) ? null : reader.GetString(ordinal);
     }
 
-    public static TEnum GetEnum<TEnum>(this NpgsqlDataReader reader, string column)
+    public static TEnum GetEnum<TEnum>(this NpgsqlDataReader reader, int ordinal)
         where TEnum : struct, Enum
     {
         return Enum.Parse<TEnum>(
-            reader.GetString(reader.GetOrdinal(column)),
+            reader.GetString(ordinal),
             ignoreCase: true);
     }
 
