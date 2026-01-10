@@ -19,7 +19,7 @@ public class CreateOperationStatusType : Migration
             """
             INSERT INTO operation_statuses (name)
             VALUES
-                ('STARTED'),
+                ('CREATED'),
                 ('COMPLETED'),
                 ('CANCELLED'),
                 ('COMPENSATING'),

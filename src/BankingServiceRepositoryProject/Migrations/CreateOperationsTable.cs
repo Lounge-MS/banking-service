@@ -16,7 +16,7 @@ public class CreateOperationsTable : Migration
                 external_id VARCHAR(64),
                 payment_url VARCHAR(255) NOT NULL,
                 amount DECIMAL(10,2) NOT NULL CHECK (amount > 0),
-                status varchar(32) NOT NULL,
+                status varchar(32) DEFAULT 'CREATED',
                 banking_provider VARCHAR(32) NOT NULL,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
