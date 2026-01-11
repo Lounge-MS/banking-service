@@ -7,6 +7,7 @@ using BankingServiceProject.RepositoryProject.Repositories;
 using BankingServiceProject.Strategies;
 using DotNetEnv;
 using FluentMigrator.Runner;
+using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Npgsql;
@@ -21,8 +22,6 @@ configurationBuilder
     .AddEnvironmentVariables();
 
 IConfigurationRoot config = configurationBuilder.Build();
-
-IConfigurationSection mockConfiguration = config.GetSection("BankingProviders:Mock");
 
 var serviceCollection = new ServiceCollection();
 serviceCollection.AddSingleton<IConfiguration>(config);
@@ -48,12 +47,19 @@ serviceCollection
     .AddSingleton<AesEncryptor>();
 
 serviceCollection
+    .AddSingleton<IMemoryCache, MemoryCache>()
+    .AddSingleton<CacheStorage<OperationEntity>>();
+
+serviceCollection
     .AddSingleton(dataSourceBuilder.Build())
     .AddSingleton<OperationsRepository>()
     .AddSingleton<BankingService>();
 
+IConfigurationSection mockConfiguration = config.GetSection("BankingProviders:Mock");
+IConfigurationSection operationsCacheConfiguration = config.GetSection("Cache:OperationsRepository");
 serviceCollection
-    .Configure<MockBankingProviderStrategyOptions>(mockConfiguration);
+    .Configure<MockBankingProviderStrategyOptions>(mockConfiguration)
+    .Configure<CacheStorageOptions<OperationEntity>>(operationsCacheConfiguration);
 
 Assembly repoAssembly = typeof(CreateOperationsTable).Assembly;
 serviceCollection
@@ -69,6 +75,10 @@ ServiceProvider sp = serviceCollection.BuildServiceProvider();
 IMigrationRunner runner = sp.GetRequiredService<IMigrationRunner>();
 runner.MigrateUp();
 
+OperationsRepository repository = sp.GetRequiredService<OperationsRepository>();
 BankingService service = sp.GetRequiredService<BankingService>();
 Console.WriteLine(
     await service.StartPaymentAsync("123", 50, BankingProvider.Mock, CancellationToken.None));
+
+Console.WriteLine(
+    await repository.GetOperationByIdempotencyKeyAsync("123"));

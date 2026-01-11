@@ -9,16 +9,23 @@ namespace BankingServiceProject.RepositoryProject.Repositories;
 public class OperationsRepository
 {
     private readonly NpgsqlDataSource _dataSource;
+    private readonly CacheStorage<OperationEntity> _cacheStorage;
 
-    public OperationsRepository(NpgsqlDataSource dataSource)
+    public OperationsRepository(
+        NpgsqlDataSource dataSource,
+        CacheStorage<OperationEntity> cacheStorage)
     {
         _dataSource = dataSource;
+        _cacheStorage = cacheStorage;
     }
 
     public async Task<OperationEntity> GetOperationAsync(
         string id,
         CancellationToken cancellationToken = default)
     {
+        OperationEntity? cached = _cacheStorage.TryGetBy("id", id);
+        if (cached != null) return cached;
+
         NpgsqlCommand command = _dataSource.CreateCommand();
         const string sql =
             """
@@ -29,13 +36,19 @@ public class OperationsRepository
         command.Parameters.AddWithValue("id", id);
         await using NpgsqlDataReader reader = await command.ExecuteReaderAsync(cancellationToken);
         await reader.ReadAsync(cancellationToken);
-        return OperationEntity.FromReader(reader);
+
+        var entity = OperationEntity.FromReader(reader);
+        StoreEntity(entity);
+        return entity;
     }
 
     public async Task<OperationEntity> GetOperationByIdempotencyKeyAsync(
         string idempotencyKey,
         CancellationToken cancellationToken = default)
     {
+        OperationEntity? cached = _cacheStorage.TryGetBy("idempotency_key", idempotencyKey);
+        if (cached != null) return cached;
+
         NpgsqlCommand command = _dataSource.CreateCommand();
         const string sql =
             """
@@ -46,7 +59,10 @@ public class OperationsRepository
         command.Parameters.AddWithValue("idempotency_key", idempotencyKey);
         await using NpgsqlDataReader reader = await command.ExecuteReaderAsync(cancellationToken);
         await reader.ReadAsync(cancellationToken);
-        return OperationEntity.FromReader(reader);
+
+        var entity = OperationEntity.FromReader(reader);
+        StoreEntity(entity);
+        return entity;
     }
 
     public async Task<OperationEntity> CreateOperationAsync(
@@ -88,7 +104,9 @@ public class OperationsRepository
         {
             await using NpgsqlDataReader reader = await command.ExecuteReaderAsync(cancellationToken);
             await reader.ReadAsync(cancellationToken);
-            return OperationEntity.FromReader(reader);
+            var entity = OperationEntity.FromReader(reader);
+            StoreEntity(entity);
+            return entity;
         }
         catch (PostgresException ex) when (ex.SqlState == "23505")
         {
@@ -104,7 +122,7 @@ public class OperationsRepository
         }
     }
 
-    public async Task UpdateStatusAsync(
+    public async Task<OperationEntity> UpdateStatusAsync(
         string id,
         OperationStatus status,
         CancellationToken cancellationToken = default)
@@ -115,12 +133,23 @@ public class OperationsRepository
             UPDATE TABLE operations
             SET status = :status
             WHERE id = :id;
+            RETURNING *;
             """;
         command.CommandText = sql;
 
         command.Parameters.AddWithValue("id", id);
         command.Parameters.AddWithValue("status", status.ToDbValue());
 
-        await command.ExecuteNonQueryAsync(cancellationToken);
+        await using NpgsqlDataReader reader = await command.ExecuteReaderAsync(cancellationToken);
+        await reader.ReadAsync(cancellationToken);
+        var entity = OperationEntity.FromReader(reader);
+        StoreEntity(entity);
+        return entity;
+    }
+
+    private void StoreEntity(OperationEntity entity)
+    {
+        _cacheStorage.Set("id", entity.Id, entity);
+        _cacheStorage.Set("idempotency_key", entity.IdempotencyKey, entity);
     }
 }
