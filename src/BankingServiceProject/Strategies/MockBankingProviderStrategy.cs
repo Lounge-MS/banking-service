@@ -11,23 +11,23 @@ namespace BankingServiceProject.Strategies;
 public class MockBankingProviderStrategy : IBankingProviderStrategy
 {
     private readonly IMockBankingProviderClient _client;
-
     private readonly MockBankingProviderStrategyOptions _options;
-
     private readonly AesEncryptor _encryptor;
-
     private readonly ISecretsProvider _secretsProvider;
+    private readonly JsonSerializerOptions _jsonOptions;
 
     public MockBankingProviderStrategy(
         IMockBankingProviderClient client,
         IOptions<MockBankingProviderStrategyOptions> options,
         AesEncryptor encryptor,
-        ISecretsProvider secretsProvider)
+        ISecretsProvider secretsProvider,
+        JsonSerializerOptions jsonOptions)
     {
         _client = client;
         _options = options.Value;
         _encryptor = encryptor;
         _secretsProvider = secretsProvider;
+        _jsonOptions = jsonOptions;
     }
 
     public async Task<OperationEntity> StartPaymentAsync(
@@ -59,7 +59,7 @@ public class MockBankingProviderStrategy : IBankingProviderStrategy
         return await repository.CreateOperationAsync(
             idempotencyKey,
             result.Id,
-            JsonSerializer.SerializeToDocument(metainfo),
+            JsonSerializer.SerializeToDocument(metainfo, _jsonOptions),
             new Uri($"{_options.BaseUrl}/confirm/{result.Id}"),
             amount,
             BankingProvider.Mock,

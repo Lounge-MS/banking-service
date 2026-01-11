@@ -11,6 +11,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Npgsql;
 using System.Reflection;
+using System.Text.Json;
 
 Env.Load("dev.env");
 var configurationBuilder = new ConfigurationBuilder();
@@ -29,6 +30,13 @@ serviceCollection.AddSingleton<IConfiguration>(config);
 var secretsProvider = new EnvironmentSecretsProvider();
 var dataSourceBuilder = new NpgsqlDataSourceBuilder(
     secretsProvider.GetSecretString("POSTGRES_CONNECTION_STRING"));
+
+serviceCollection.AddSingleton(new JsonSerializerOptions
+{
+   PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+   DictionaryKeyPolicy = JsonNamingPolicy.CamelCase,
+   WriteIndented = false,
+});
 
 serviceCollection
     .AddMockClient()
