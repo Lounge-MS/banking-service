@@ -1,4 +1,5 @@
 using BankingServiceProject.MockBankingProviderProject.Domain;
+using BankingServiceProject.MockBankingProviderProject.Domain.Payments;
 using BankingServiceProject.MockBankingProviderProject.Exceptions;
 using Microsoft.Extensions.Options;
 using System.Collections.Concurrent;
@@ -10,8 +11,6 @@ namespace BankingServiceProject.MockBankingProviderProject;
 public class MockBankingProvider
 {
     private readonly ConcurrentDictionary<string, MockPayment> _payments = new();
-    private readonly ConcurrentDictionary<string, UnfinishedPayment> _processingPayments = new();
-    private readonly ConcurrentDictionary<string, RollbackPayment> _rollbackPayments = new();
     private readonly MockBankingOptions _options;
     private readonly IHttpClientFactory _clientFactory;
 
@@ -27,14 +26,8 @@ public class MockBankingProvider
         StartPaymentRequest request,
         CancellationToken cancellationToken = default)
     {
-        var payment = MockPayment.FromStartPaymentRequest(request);
-        var processingPayment = new UnfinishedPayment(
-            payment,
-            new Uri(request.ConfirmationUrl),
-            request.IdentityToken);
-
+        var payment = UnfinishedPayment.FromStartPaymentRequest(request);
         _payments[payment.Id] = payment;
-        _processingPayments[payment.Id] = processingPayment;
 
         if (!_options.RequireUrlVisit)
         {
@@ -50,9 +43,9 @@ public class MockBankingProvider
         CancellationToken cancellationToken = default)
     {
         _ = _payments.GetValueOrDefault(paymentId) ?? throw new PaymentNotFoundException();
+        FinishedPaymentStatus result = await ExecutePaymentAsync(paymentId, cancellationToken);
 
-        FinishedPaymentStatus status = await ExecutePaymentAsync(paymentId, cancellationToken);
-        return status switch
+        return result switch
         {
             FinishedPaymentStatus.Approved => "Payment confirmed",
             FinishedPaymentStatus.Declined => "Payment declined",
@@ -69,16 +62,12 @@ public class MockBankingProvider
             _payments.GetValueOrDefault(request.PaymentId) ?? throw new PaymentNotFoundException();
         payment.ValidateToken(externalIdentityToken);
 
-        payment.ValidateState(MockPaymentStatus.Approved);
+        if (payment is not ClosedPayment closedPayment)
+        {
+            throw new IllegalStateException();
+        }
 
-        var rollbackPayment = new RollbackPayment(
-            payment,
-            new Uri(request.ConfirmationUrl),
-            request.IdentityToken);
-        payment.Status = MockPaymentStatus.OnRollback;
-
-        _rollbackPayments[payment.Id] = rollbackPayment;
-
+        _payments[payment.Id] = closedPayment.Rollback(request.ConfirmationUrl, request.IdentityToken);
         _ = ExecuteRollbackAsync(
             payment.Id,
             cancellationToken);
@@ -89,51 +78,33 @@ public class MockBankingProvider
         CancellationToken cancellationToken = default)
     {
         await Task.Delay(_options.DelayMs, cancellationToken);
-        _rollbackPayments.TryRemove(paymentId, out RollbackPayment? rollbackPayment);
+        MockPayment payment =
+            _payments.GetValueOrDefault(paymentId) ?? throw new PaymentNotFoundException();
 
-        if (rollbackPayment == null || rollbackPayment.Payment.Status != MockPaymentStatus.Approved)
+        if (payment is not RollbackPayment rollbackPayment)
         {
             throw new IllegalStateException();
         }
 
-        if (_options.AllowRollbacks)
-        {
-            await AcceptRollbackAsync(
-                rollbackPayment,
-                cancellationToken);
-        }
-        else
-        {
-            await DeclineRollbackAsync(
-                rollbackPayment,
-                cancellationToken);
-        }
+        FinishedRollbackStatus status = _options.AllowRollbacks
+            ? FinishedRollbackStatus.Approved
+            : FinishedRollbackStatus.Declined;
+
+        await CloseRollbackAsync(rollbackPayment, status, cancellationToken);
     }
 
-    private async Task AcceptRollbackAsync(
+    private async Task CloseRollbackAsync(
         RollbackPayment rollbackPayment,
+        FinishedRollbackStatus status,
         CancellationToken cancellationToken = default)
     {
-        rollbackPayment.Payment.Status = MockPaymentStatus.Rollback;
+        RollbackedPayment closed = rollbackPayment.CloseRollback(FinishedRollbackStatus.Approved);
         await SendWebhookAsync(
             rollbackPayment.ConfirmationUrl,
             rollbackPayment.ExternalIdentityToken,
             new FinishedRollbackWebhookRequest(
-                rollbackPayment.Payment.Id,
-                FinishedRollbackStatus.Approved),
-            cancellationToken);
-    }
-
-    private async Task DeclineRollbackAsync(
-        RollbackPayment rollbackPayment,
-        CancellationToken cancellationToken = default)
-    {
-        await SendWebhookAsync(
-            rollbackPayment.ConfirmationUrl,
-            rollbackPayment.ExternalIdentityToken,
-            new FinishedRollbackWebhookRequest(
-                rollbackPayment.Payment.Id,
-                FinishedRollbackStatus.Declined),
+                closed.Id,
+                closed.Status),
             cancellationToken);
     }
 
@@ -142,54 +113,34 @@ public class MockBankingProvider
         CancellationToken cancellationToken = default)
     {
         await Task.Delay(_options.DelayMs, cancellationToken);
-        _processingPayments.TryRemove(paymentId, out UnfinishedPayment? processingPayment);
+        MockPayment payment =
+            _payments.GetValueOrDefault(paymentId) ?? throw new PaymentNotFoundException();
 
-        if (processingPayment == null || processingPayment.Payment.Status != MockPaymentStatus.Created)
+        if (payment is not UnfinishedPayment processingPayment)
         {
             throw new IllegalStateException();
         }
 
-        if (_options.AllowPayment)
-        {
-            await AcceptPaymentAsync(
-                processingPayment,
-                cancellationToken);
-            return FinishedPaymentStatus.Approved;
-        }
-        else
-        {
-            await DeclinePaymentAsync(
-                processingPayment,
-                cancellationToken);
-            return FinishedPaymentStatus.Declined;
-        }
+        FinishedPaymentStatus status = _options.AllowPayment
+            ? FinishedPaymentStatus.Approved
+            : FinishedPaymentStatus.Declined;
+
+        await ClosePaymentAsync(processingPayment, status, cancellationToken);
+        return status;
     }
 
-    private async Task AcceptPaymentAsync(
+    private async Task ClosePaymentAsync(
         UnfinishedPayment processingPayment,
+        FinishedPaymentStatus status,
         CancellationToken cancellationToken = default)
     {
-        processingPayment.Payment.Status = MockPaymentStatus.Approved;
+        ClosedPayment closedPayment = processingPayment.Close(status);
         await SendWebhookAsync(
             processingPayment.ConfirmationUrl,
             processingPayment.ExternalIdentityToken,
             new FinishedPaymentWebhookRequest(
-                processingPayment.Payment.Id,
-                FinishedPaymentStatus.Approved),
-            cancellationToken);
-    }
-
-    private async Task DeclinePaymentAsync(
-        UnfinishedPayment processingPayment,
-        CancellationToken cancellationToken = default)
-    {
-        processingPayment.Payment.Status = MockPaymentStatus.Declined;
-        await SendWebhookAsync(
-            processingPayment.ConfirmationUrl,
-            processingPayment.ExternalIdentityToken,
-            new FinishedPaymentWebhookRequest(
-                processingPayment.Payment.Id,
-                FinishedPaymentStatus.Declined),
+                closedPayment.Id,
+                closedPayment.Status),
             cancellationToken);
     }
 
