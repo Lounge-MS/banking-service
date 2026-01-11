@@ -1,8 +1,8 @@
 using BankingServiceProject.Clients;
 using BankingServiceProject.Clients.Dto;
-using BankingServiceProject.Cryptography;
 using BankingServiceProject.RepositoryProject.Domain;
 using BankingServiceProject.RepositoryProject.Repositories;
+using BankingServiceProject.SharedProject.Cryptography;
 using Microsoft.Extensions.Options;
 using System.Text.Json;
 

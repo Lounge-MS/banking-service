@@ -1,7 +1,7 @@
 using System.Security.Cryptography;
 using System.Text;
 
-namespace BankingServiceProject.Cryptography;
+namespace BankingServiceProject.SharedProject.Cryptography;
 
 public class AesEncryptor
 {

@@ -1,9 +1,9 @@
 #pragma warning disable CA1506
 using BankingServiceProject;
-using BankingServiceProject.Cryptography;
 using BankingServiceProject.RepositoryProject.Domain;
 using BankingServiceProject.RepositoryProject.Migrations;
 using BankingServiceProject.RepositoryProject.Repositories;
+using BankingServiceProject.SharedProject.Cryptography;
 using BankingServiceProject.Strategies;
 using DotNetEnv;
 using FluentMigrator.Runner;
