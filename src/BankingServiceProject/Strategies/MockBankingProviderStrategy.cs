@@ -1,0 +1,68 @@
+using BankingServiceProject.Clients;
+using BankingServiceProject.Clients.Dto;
+using BankingServiceProject.Cryptography;
+using BankingServiceProject.RepositoryProject.Domain;
+using BankingServiceProject.RepositoryProject.Repositories;
+using Microsoft.Extensions.Options;
+using System.Text.Json;
+
+namespace BankingServiceProject.Strategies;
+
+public class MockBankingProviderStrategy : IBankingProviderStrategy
+{
+    private readonly IMockBankingProviderClient _client;
+
+    private readonly MockBankingProviderStrategyOptions _options;
+
+    private readonly AesEncryptor _encryptor;
+
+    private readonly ISecretsProvider _secretsProvider;
+
+    public MockBankingProviderStrategy(
+        IMockBankingProviderClient client,
+        IOptions<MockBankingProviderStrategyOptions> options,
+        AesEncryptor encryptor,
+        ISecretsProvider secretsProvider)
+    {
+        _client = client;
+        _options = options.Value;
+        _encryptor = encryptor;
+        _secretsProvider = secretsProvider;
+    }
+
+    public async Task<OperationEntity> StartPaymentAsync(
+        string id,
+        string idempotencyKey,
+        decimal amount,
+        OperationsRepository repository,
+        CancellationToken cancellationToken = default)
+    {
+        var url = new Uri($"{_options.WebhookUrl}/{id}");
+        var request = new MockBankingProviderStartPaymentRequest(
+            amount,
+            url,
+            _secretsProvider
+                .GetSecretString(_options.IdentityTokenSecretKeyName));
+
+        MockBankingProviderStartPaymentResponse result =
+            await _client.StartPaymentAsync(request, cancellationToken);
+        AesEncryptedData encryptedData = _encryptor
+            .Encrypt(
+                result.IdentityToken,
+                _secretsProvider.GetSecretByteArray(
+                    _options.EncryptionSecretKeyName));
+
+        var metainfo = new MockBankingProviderMetainfo(
+            encryptedData.EncryptedData,
+            encryptedData.Iv);
+
+        return await repository.CreateOperationAsync(
+            idempotencyKey,
+            result.Id,
+            JsonSerializer.SerializeToDocument(metainfo),
+            new Uri($"{_options.BaseUrl}/confirm/{result.Id}"),
+            amount,
+            BankingProvider.Mock,
+            cancellationToken);
+    }
+}

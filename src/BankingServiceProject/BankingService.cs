@@ -1,38 +1,46 @@
-using BankingServiceProject.Clients.Dto;
 using BankingServiceProject.Dto;
 using BankingServiceProject.RepositoryProject.Domain;
+using BankingServiceProject.RepositoryProject.Exceptions;
 using BankingServiceProject.RepositoryProject.Repositories;
-using System.Text.Json;
+using BankingServiceProject.Strategies;
 
 namespace BankingServiceProject;
 
 public class BankingService
 {
     private readonly OperationsRepository _operationsRepository;
+    private readonly BankingProviderStrategySelector _strategySelector;
 
     public BankingService(
-        OperationsRepository operationsRepository)
+        OperationsRepository operationsRepository,
+        BankingProviderStrategySelector strategySelector)
     {
         _operationsRepository = operationsRepository;
+        _strategySelector = strategySelector;
     }
 
-    public async Task<StartPaymentResponse> StartPayment(
+    public async Task<StartPaymentResponse> StartPaymentAsync(
         string idempotencyKey,
         decimal amount,
         BankingProvider bankingProvider,
         CancellationToken cancellationToken)
     {
-        /* TODO MOCK */
+        string id = Guid.NewGuid().ToString();
+        try
+        {
+            OperationEntity operation = await _strategySelector
+                .GetStrategy(bankingProvider)
+                .StartPaymentAsync(id, idempotencyKey, amount, _operationsRepository, cancellationToken);
 
-        OperationEntity operation = await _operationsRepository.CreateOperation(
-            idempotencyKey,
-            null,
-            JsonSerializer.SerializeToDocument(new MockBankingProviderMetainfo([], [])),
-            new Uri(string.Empty),
-            amount,
-            bankingProvider,
-            cancellationToken);
-
-        return StartPaymentResponse.FromOperation(operation);
+            return StartPaymentResponse.FromOperation(operation);
+        }
+        catch (IdempotencyKeyConflictException)
+        {
+            return StartPaymentResponse.FromOperation(
+                await _operationsRepository
+                    .GetOperationByIdempotencyKeyAsync(
+                        idempotencyKey,
+                        cancellationToken));
+        }
     }
 }

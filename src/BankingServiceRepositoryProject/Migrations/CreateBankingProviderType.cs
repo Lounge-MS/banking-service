@@ -18,8 +18,8 @@ public class CreateBankingProviderType : Migration
 
         Execute.Sql(
             """
-            INSERT INTO banking_providers (name)
-            VALUES ('MOCK');
+            INSERT INTO banking_providers (name, api_base_url)
+            VALUES ('MOCK', 'http://localhost:8081');
             """);
     }
 

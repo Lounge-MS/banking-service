@@ -1,3 +1,5 @@
 namespace BankingServiceProject.Clients.Dto;
 
-public record MockBankingProviderStartPaymentResponse(string Id);
+public record MockBankingProviderStartPaymentResponse(
+    string Id,
+    string IdentityToken);

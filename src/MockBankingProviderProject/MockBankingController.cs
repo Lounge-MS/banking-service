@@ -16,10 +16,10 @@ public class MockBankingController : ControllerBase
     }
 
     [HttpPost("start")]
-    public async Task<IActionResult> StartPayment(
+    public async Task<IActionResult> StartPaymentAsync(
         [FromBody] StartPaymentRequest request)
     {
-        return new OkObjectResult(await _provider.StartPayment(request));
+        return new OkObjectResult(await _provider.StartPaymentAsync(request));
     }
 
     [HttpPost("rollback")]
@@ -37,8 +37,8 @@ public class MockBankingController : ControllerBase
     }
 
     [HttpGet("confirm/{paymentId}")]
-    public async Task<IActionResult> ConfirmPayment(string paymentId)
+    public async Task<IActionResult> ConfirmPaymentAsync(string paymentId)
     {
-        return Content(await _provider.ConfirmPayment(paymentId));
+        return Content(await _provider.ConfirmPaymentAsync(paymentId));
     }
 }

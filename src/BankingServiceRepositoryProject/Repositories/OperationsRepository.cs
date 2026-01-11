@@ -15,9 +15,9 @@ public class OperationsRepository
         _dataSource = dataSource;
     }
 
-    public async Task<OperationEntity> GetOperation(
+    public async Task<OperationEntity> GetOperationAsync(
         string id,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken = default)
     {
         NpgsqlCommand command = _dataSource.CreateCommand();
         const string sql =
@@ -28,17 +28,35 @@ public class OperationsRepository
         command.CommandText = sql;
         command.Parameters.AddWithValue("id", id);
         await using NpgsqlDataReader reader = await command.ExecuteReaderAsync(cancellationToken);
+        await reader.ReadAsync(cancellationToken);
         return OperationEntity.FromReader(reader);
     }
 
-    public async Task<OperationEntity> CreateOperation(
+    public async Task<OperationEntity> GetOperationByIdempotencyKeyAsync(
+        string idempotencyKey,
+        CancellationToken cancellationToken = default)
+    {
+        NpgsqlCommand command = _dataSource.CreateCommand();
+        const string sql =
+            """
+            SELECT * FROM operations
+            WHERE idempotency_key = :idempotency_key
+            """;
+        command.CommandText = sql;
+        command.Parameters.AddWithValue("idempotency_key", idempotencyKey);
+        await using NpgsqlDataReader reader = await command.ExecuteReaderAsync(cancellationToken);
+        await reader.ReadAsync(cancellationToken);
+        return OperationEntity.FromReader(reader);
+    }
+
+    public async Task<OperationEntity> CreateOperationAsync(
         string idempotencyKey,
         string? externalId,
         JsonDocument metainfo,
         Uri paymentUrl,
         decimal amount,
         BankingProvider bankingProvider,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken = default)
     {
         string id = Guid.NewGuid().ToString();
         NpgsqlCommand command = _dataSource.CreateCommand();
@@ -69,6 +87,7 @@ public class OperationsRepository
         try
         {
             await using NpgsqlDataReader reader = await command.ExecuteReaderAsync(cancellationToken);
+            await reader.ReadAsync(cancellationToken);
             return OperationEntity.FromReader(reader);
         }
         catch (PostgresException ex) when (ex.SqlState == "23505")
@@ -85,9 +104,10 @@ public class OperationsRepository
         }
     }
 
-    public async Task UpdateStatus(
+    public async Task UpdateStatusAsync(
         string id,
-        OperationStatus status)
+        OperationStatus status,
+        CancellationToken cancellationToken = default)
     {
         NpgsqlCommand command = _dataSource.CreateCommand();
         const string sql =
@@ -101,6 +121,6 @@ public class OperationsRepository
         command.Parameters.AddWithValue("id", id);
         command.Parameters.AddWithValue("status", status.ToDbValue());
 
-        await command.ExecuteNonQueryAsync();
+        await command.ExecuteNonQueryAsync(cancellationToken);
     }
 }

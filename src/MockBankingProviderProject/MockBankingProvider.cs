@@ -23,7 +23,7 @@ public class MockBankingProvider
         _clientFactory = httpClientFactory;
     }
 
-    public ValueTask<StartPaymentResponse> StartPayment(
+    public ValueTask<StartPaymentResponse> StartPaymentAsync(
         StartPaymentRequest request,
         CancellationToken cancellationToken = default)
     {
@@ -38,20 +38,20 @@ public class MockBankingProvider
 
         if (!_options.RequireUrlVisit)
         {
-            _ = ExecutePayment(payment.Id, cancellationToken);
+            _ = ExecutePaymentAsync(payment.Id, cancellationToken);
         }
 
         return new ValueTask<StartPaymentResponse>(
             StartPaymentResponse.FromPayment(payment));
     }
 
-    public async Task<string> ConfirmPayment(
+    public async Task<string> ConfirmPaymentAsync(
         string paymentId,
         CancellationToken cancellationToken = default)
     {
         _ = _payments.GetValueOrDefault(paymentId) ?? throw new PaymentNotFoundException();
 
-        FinishedPaymentStatus status = await ExecutePayment(paymentId, cancellationToken);
+        FinishedPaymentStatus status = await ExecutePaymentAsync(paymentId, cancellationToken);
         return status switch
         {
             FinishedPaymentStatus.Approved => "Payment confirmed",
@@ -75,15 +75,16 @@ public class MockBankingProvider
             payment,
             new Uri(request.ConfirmationUrl),
             request.IdentityToken);
+        payment.Status = MockPaymentStatus.OnRollback;
 
         _rollbackPayments[payment.Id] = rollbackPayment;
 
-        _ = ExecuteRollback(
+        _ = ExecuteRollbackAsync(
             payment.Id,
             cancellationToken);
     }
 
-    private async Task ExecuteRollback(
+    private async Task ExecuteRollbackAsync(
         string paymentId,
         CancellationToken cancellationToken = default)
     {
@@ -97,24 +98,24 @@ public class MockBankingProvider
 
         if (_options.AllowRollbacks)
         {
-            await AcceptRollback(
+            await AcceptRollbackAsync(
                 rollbackPayment,
                 cancellationToken);
         }
         else
         {
-            await DeclineRollback(
+            await DeclineRollbackAsync(
                 rollbackPayment,
                 cancellationToken);
         }
     }
 
-    private async Task AcceptRollback(
+    private async Task AcceptRollbackAsync(
         RollbackPayment rollbackPayment,
         CancellationToken cancellationToken = default)
     {
         rollbackPayment.Payment.Status = MockPaymentStatus.Rollback;
-        await SendWebhook(
+        await SendWebhookAsync(
             rollbackPayment.ConfirmationUrl,
             rollbackPayment.ExternalIdentityToken,
             new FinishedRollbackWebhookRequest(
@@ -123,11 +124,11 @@ public class MockBankingProvider
             cancellationToken);
     }
 
-    private async Task DeclineRollback(
+    private async Task DeclineRollbackAsync(
         RollbackPayment rollbackPayment,
         CancellationToken cancellationToken = default)
     {
-        await SendWebhook(
+        await SendWebhookAsync(
             rollbackPayment.ConfirmationUrl,
             rollbackPayment.ExternalIdentityToken,
             new FinishedRollbackWebhookRequest(
@@ -136,7 +137,7 @@ public class MockBankingProvider
             cancellationToken);
     }
 
-    private async Task<FinishedPaymentStatus> ExecutePayment(
+    private async Task<FinishedPaymentStatus> ExecutePaymentAsync(
         string paymentId,
         CancellationToken cancellationToken = default)
     {
@@ -150,26 +151,26 @@ public class MockBankingProvider
 
         if (_options.AllowPayment)
         {
-            await AcceptPayment(
+            await AcceptPaymentAsync(
                 processingPayment,
                 cancellationToken);
             return FinishedPaymentStatus.Approved;
         }
         else
         {
-            await DeclinePayment(
+            await DeclinePaymentAsync(
                 processingPayment,
                 cancellationToken);
             return FinishedPaymentStatus.Declined;
         }
     }
 
-    private async Task AcceptPayment(
+    private async Task AcceptPaymentAsync(
         UnfinishedPayment processingPayment,
         CancellationToken cancellationToken = default)
     {
         processingPayment.Payment.Status = MockPaymentStatus.Approved;
-        await SendWebhook(
+        await SendWebhookAsync(
             processingPayment.ConfirmationUrl,
             processingPayment.ExternalIdentityToken,
             new FinishedPaymentWebhookRequest(
@@ -178,12 +179,12 @@ public class MockBankingProvider
             cancellationToken);
     }
 
-    private async Task DeclinePayment(
+    private async Task DeclinePaymentAsync(
         UnfinishedPayment processingPayment,
         CancellationToken cancellationToken = default)
     {
         processingPayment.Payment.Status = MockPaymentStatus.Declined;
-        await SendWebhook(
+        await SendWebhookAsync(
             processingPayment.ConfirmationUrl,
             processingPayment.ExternalIdentityToken,
             new FinishedPaymentWebhookRequest(
@@ -192,7 +193,7 @@ public class MockBankingProvider
             cancellationToken);
     }
 
-    private async Task SendWebhook(
+    private async Task SendWebhookAsync(
         Uri url,
         string identityToken,
         object body,

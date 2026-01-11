@@ -1,5 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
     <PropertyGroup>
+        <OutputType>exe</OutputType>
         <TargetFramework>net9.0</TargetFramework>
         <Nullable>enable</Nullable>
         <RootNamespace>BankingServiceProject</RootNamespace>
@@ -8,6 +9,16 @@
         <ProjectReference Include="../BankingServiceRepositoryProject/BankingServiceRepositoryProject.csproj" />
     </ItemGroup>
     <ItemGroup>
+      <PackageReference Include="DotNetEnv" />
+      <PackageReference Include="FluentMigrator.Runner.Postgres" />
+      <PackageReference Include="Microsoft.Extensions.Configuration.EnvironmentVariables" />
+      <PackageReference Include="Microsoft.Extensions.Configuration.Json" />
+      <PackageReference Include="Microsoft.Extensions.Options.ConfigurationExtensions" />
       <PackageReference Include="Refit" />
+      <PackageReference Include="Refit.HttpClientFactory" />
+    </ItemGroup>
+    <ItemGroup>
+        <None Include="appsettings.json" CopyToOutputDirectory="PreserveNewest" />
+        <None Include="dev.env" CopyToOutputDirectory="PreserveNewest" />
     </ItemGroup>
 </Project>

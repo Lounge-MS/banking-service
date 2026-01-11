@@ -5,9 +5,10 @@ namespace BankingServiceProject.Cryptography;
 
 public class AesEncryptor
 {
-    public static AesEncryptedData Encrypt(string plain, byte[] key)
+    public AesEncryptedData Encrypt(string plain, byte[] key)
     {
         using var aes = Aes.Create();
+        aes.KeySize = 256;
         aes.Key = key;
         aes.GenerateIV();
         aes.Mode = CipherMode.CBC;
@@ -20,9 +21,10 @@ public class AesEncryptor
         return new AesEncryptedData(cipherBytes, aes.IV);
     }
 
-    public static string Decrypt(AesEncryptedData encryptedData, byte[] key)
+    public string Decrypt(AesEncryptedData encryptedData, byte[] key)
     {
         using var aes = Aes.Create();
+        aes.KeySize = 256;
         aes.Key = key;
         aes.IV = encryptedData.Iv;
         aes.Mode = CipherMode.CBC;

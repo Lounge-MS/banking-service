@@ -3,10 +3,10 @@ using Refit;
 
 namespace BankingServiceProject.Clients;
 
-public interface IMockBankingProviderApi
+public interface IMockBankingProviderClient
 {
     [Post("/start")]
-    Task<MockBankingProviderStartPaymentResponse> StartPayment(
+    Task<MockBankingProviderStartPaymentResponse> StartPaymentAsync(
         [Body] MockBankingProviderStartPaymentRequest request,
         CancellationToken cancellationToken = default);
 }

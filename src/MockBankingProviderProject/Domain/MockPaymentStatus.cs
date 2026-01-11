@@ -6,4 +6,5 @@ public enum MockPaymentStatus
     Approved,
     Declined,
     Rollback,
+    OnRollback,
 }
