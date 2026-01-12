@@ -1,7 +1,6 @@
 using BankingServiceCallbackHandlerProject.Domain;
 using BankingServiceCallbackHandlerProject.Exceptions;
 using BankingServiceCallbackHandlerProject.ProviderStrategies;
-using Confluent.Kafka;
 using Itmo.Dev.Platform.Kafka.Producer;
 using Microsoft.Extensions.Options;
 using System.Threading.Channels;
@@ -10,37 +9,35 @@ namespace BankingServiceCallbackHandlerProject;
 
 public class CallbackHandlerService : BackgroundService
 {
-    private readonly IKafkaMessageProducer<Null?, object> _producer;
-    private readonly Channel<KafkaProducerMessage<Null?, object>> _channel;
+    private readonly IKafkaMessageProducer<string, string> _producer;
+    private readonly Channel<KafkaProducerMessage<string, string>> _channel;
     private readonly CallbackHandlerOptions _options;
     private readonly BankingProviderStrategySelector _selector;
 
     public CallbackHandlerService(
-        IKafkaMessageProducer<Null?, object> producer,
+        IKafkaMessageProducer<string, string> producer,
         BankingProviderStrategySelector selector,
         IOptionsMonitor<CallbackHandlerOptions> options)
     {
         _producer = producer;
         _options = options.CurrentValue;
-        _channel = Channel.CreateBounded<KafkaProducerMessage<Null?, object>>(
+        _channel = Channel.CreateBounded<KafkaProducerMessage<string, string>>(
             _options.ChannelSize);
         _selector = selector;
     }
 
     public async Task GetMessageAsync(
+        string paymentId,
         HttpRequest request,
+        string providerTypeName,
         CancellationToken cancellationToken = default)
     {
         ParsedRequest parsedRequest = await ParsedRequest.ParseRequestAsync(request);
-        if (!parsedRequest.QueryParams.TryGetValue("type", out string? providerTypeName))
-        {
-            throw new NoProviderTypeException();
-        }
 
         IBankingProviderStrategy strategy = _selector.GetStrategy(providerTypeName);
         await strategy.ValidateRequestAsync(parsedRequest, cancellationToken);
 
-        if (!_channel.Writer.TryWrite(new KafkaProducerMessage<Null?, object>(null, parsedRequest.Body)))
+        if (!_channel.Writer.TryWrite(new KafkaProducerMessage<string, string>(paymentId, parsedRequest.Body)))
         {
             throw new ChannelFullException(_channel.Reader.Count);
         }

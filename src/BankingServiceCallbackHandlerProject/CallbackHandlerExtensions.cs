@@ -1,6 +1,5 @@
 using BankingServiceCallbackHandlerProject.ProviderStrategies;
 using BankingServiceProject.SharedProject.Cryptography;
-using Confluent.Kafka;
 using Itmo.Dev.Platform.Kafka.Extensions;
 
 namespace BankingServiceCallbackHandlerProject;
@@ -16,8 +15,8 @@ public static class CallbackHandlerExtensions
             selector => selector
                 .ConfigureOptions(kafkaSection)
                 .AddProducer(b => b
-                    .WithKey<Null?>()
-                    .WithValue<object>()
+                    .WithKey<string>()
+                    .WithValue<string>()
                     .WithConfiguration(kafkaMessageSection)
                     .SerializeKeyWithNewtonsoft()
                     .SerializeValueWithNewtonsoft()));

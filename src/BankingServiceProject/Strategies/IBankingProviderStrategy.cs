@@ -11,4 +11,9 @@ public interface IBankingProviderStrategy
         decimal amount,
         OperationsRepository repository,
         CancellationToken cancellationToken = default);
+
+    Uri GenerateWebhookUrl(Uri baseUrl, string paymentId)
+    {
+        return new Uri($"{baseUrl.AbsoluteUri}/{paymentId}");
+    }
 }

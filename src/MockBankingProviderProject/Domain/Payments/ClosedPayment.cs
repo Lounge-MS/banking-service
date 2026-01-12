@@ -13,7 +13,9 @@ public record ClosedPayment(
     {
         if (Status != FinishedPaymentStatus.Approved)
         {
-            throw new IllegalStateException();
+            throw new IllegalStateException(
+                nameof(FinishedPaymentStatus.Approved),
+                nameof(FinishedPaymentStatus.Declined));
         }
 
         return new RollbackPayment(

@@ -37,7 +37,10 @@ public class MockBankingProviderStrategy : IBankingProviderStrategy
         OperationsRepository repository,
         CancellationToken cancellationToken = default)
     {
-        var url = new Uri($"{_options.WebhookUrl}/{id}");
+        // Мне самому эта строка не нравится, но я не знаю как сделать это красиво.
+        // Это проблема C# с кривой реализацией дефолтных методов интерфейса.
+        Uri url = ((IBankingProviderStrategy)this)
+            .GenerateWebhookUrl(new Uri(_options.WebhookBaseUrl), id);
         var request = new MockBankingProviderStartPaymentRequest(
             amount,
             url,

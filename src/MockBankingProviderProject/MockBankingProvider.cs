@@ -64,7 +64,7 @@ public class MockBankingProvider
 
         if (payment is not ClosedPayment closedPayment)
         {
-            throw new IllegalStateException();
+            throw new IllegalStateException(nameof(ClosedPayment), payment.GetType().Name);
         }
 
         _payments[payment.Id] = closedPayment.Rollback(request.ConfirmationUrl, request.IdentityToken);
@@ -83,7 +83,7 @@ public class MockBankingProvider
 
         if (payment is not RollbackPayment rollbackPayment)
         {
-            throw new IllegalStateException();
+            throw new IllegalStateException(nameof(RollbackedPayment), payment.GetType().Name);
         }
 
         FinishedRollbackStatus status = _options.AllowRollbacks
@@ -118,7 +118,7 @@ public class MockBankingProvider
 
         if (payment is not UnfinishedPayment processingPayment)
         {
-            throw new IllegalStateException();
+            throw new IllegalStateException(nameof(UnfinishedPayment), payment.GetType().Name);
         }
 
         FinishedPaymentStatus status = _options.AllowPayment
@@ -150,13 +150,28 @@ public class MockBankingProvider
         object body,
         CancellationToken cancellationToken = default)
     {
-        using HttpClient client = _clientFactory.CreateClient();
-        client.DefaultRequestHeaders.Add("X-Identity-Token", identityToken);
+        try
+        {
+            using HttpClient client = _clientFactory.CreateClient();
+            client.DefaultRequestHeaders.Add("X-Identity-Token", identityToken);
 
-        using var content = new StringContent(
-            JsonSerializer.Serialize(body),
-            Encoding.UTF8,
-            "application/json");
-        await client.PostAsync(url, content, cancellationToken);
+            using var content = new StringContent(
+                JsonSerializer.Serialize(body),
+                Encoding.UTF8,
+                "application/json");
+            HttpResponseMessage response = await client.PostAsync(url, content, cancellationToken);
+            if (!response.IsSuccessStatusCode)
+            {
+                throw new WebhookErrorException(response.StatusCode);
+            }
+        }
+        catch (HttpRequestException exception)
+        {
+            throw new WebhookErrorException(exception.StatusCode);
+        }
+        catch (Exception)
+        {
+            throw new WebhookErrorException();
+        }
     }
 }

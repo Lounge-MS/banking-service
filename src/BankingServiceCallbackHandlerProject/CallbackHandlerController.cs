@@ -13,11 +13,13 @@ public class CallbackHandlerController : ControllerBase
         _service = service;
     }
 
-    [HttpPost("/mock/reply")]
+    [HttpPost("/reply/{providerTypeName}/{paymentId}")]
     public async Task<IActionResult> GetMockReplyMessageAsync(
+        string providerTypeName,
+        string paymentId,
         CancellationToken cancellationToken = default)
     {
-        await _service.GetMessageAsync(Request, cancellationToken);
+        await _service.GetMessageAsync(paymentId, Request, providerTypeName, cancellationToken);
         return Ok();
     }
 }

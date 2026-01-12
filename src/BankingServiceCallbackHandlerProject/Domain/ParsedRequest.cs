@@ -4,7 +4,6 @@ namespace BankingServiceCallbackHandlerProject.Domain;
 
 public record ParsedRequest(
     Dictionary<string, string> Headers,
-    Dictionary<string, string> QueryParams,
     string Body)
 {
     public static async Task<ParsedRequest> ParseRequestAsync(
@@ -13,12 +12,9 @@ public record ParsedRequest(
         var headers = request.Headers
             .ToDictionary(h => h.Key, h => h.Value.ToString());
 
-        var queryParams = request.Query
-            .ToDictionary(q => q.Key, q => q.Value.ToString());
-
         using var reader = new StreamReader(request.Body, Encoding.UTF8);
         string body = await reader.ReadToEndAsync();
 
-        return new ParsedRequest(headers, queryParams, body);
+        return new ParsedRequest(headers, body);
     }
 }

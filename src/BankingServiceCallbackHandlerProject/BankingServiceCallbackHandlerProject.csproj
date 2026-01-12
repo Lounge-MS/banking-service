@@ -18,4 +18,8 @@
     <ItemGroup>
       <ProjectReference Include="..\BankingServiceShared\BankingServiceShared.csproj" />
     </ItemGroup>
+    <ItemGroup>
+        <None Include="appsettings.json" CopyToOutputDirectory="PreserveNewest" />
+        <None Include="dev.env" CopyToOutputDirectory="PreserveNewest" />
+    </ItemGroup>
 </Project>
