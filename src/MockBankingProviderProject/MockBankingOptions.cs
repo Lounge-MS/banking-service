@@ -2,11 +2,11 @@ namespace BankingServiceProject.MockBankingProviderProject;
 
 public record MockBankingOptions
 {
-    public bool AllowPayment { get; init; } = true;
+    public bool AllowPayment { get; set; } = true;
 
-    public bool AllowRollbacks { get; init; } = true;
+    public bool AllowRollbacks { get; set; } = true;
 
-    public bool RequireUrlVisit { get; init; } = true;
+    public bool RequireUrlVisit { get; set; } = true;
 
-    public int DelayMs { get; init; } = 0;
+    public int DelayMs { get; set; } = 0;
 }

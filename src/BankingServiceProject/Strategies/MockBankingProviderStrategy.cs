@@ -42,7 +42,7 @@ public class MockBankingProviderStrategy : IBankingProviderStrategy
             amount,
             url,
             _secretsProvider
-                .GetSecretString(_options.IdentityTokenSecretKeyName));
+                .GetSecretString(_options.IdentityTokenName));
 
         MockBankingProviderStartPaymentResponse result =
             await _client.StartPaymentAsync(request, cancellationToken);

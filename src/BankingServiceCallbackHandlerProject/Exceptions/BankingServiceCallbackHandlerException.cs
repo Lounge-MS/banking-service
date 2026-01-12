@@ -1,4 +1,4 @@
-namespace BankingServiceCallbackHandler.Exceptions;
+namespace BankingServiceCallbackHandlerProject.Exceptions;
 
 public abstract class BankingServiceCallbackHandlerException : Exception
 {

@@ -1,34 +1,46 @@
-using BankingServiceCallbackHandler.Exceptions;
+using BankingServiceCallbackHandlerProject.Domain;
+using BankingServiceCallbackHandlerProject.Exceptions;
+using BankingServiceCallbackHandlerProject.ProviderStrategies;
 using Confluent.Kafka;
 using Itmo.Dev.Platform.Kafka.Producer;
 using Microsoft.Extensions.Options;
 using System.Threading.Channels;
 
-namespace BankingServiceCallbackHandler;
+namespace BankingServiceCallbackHandlerProject;
 
 public class CallbackHandlerService : BackgroundService
 {
     private readonly IKafkaMessageProducer<Null?, object> _producer;
     private readonly Channel<KafkaProducerMessage<Null?, object>> _channel;
     private readonly CallbackHandlerOptions _options;
-    private readonly BankingProviderValidator _validator;
+    private readonly BankingProviderStrategySelector _selector;
 
     public CallbackHandlerService(
         IKafkaMessageProducer<Null?, object> producer,
-        BankingProviderValidator validator,
+        BankingProviderStrategySelector selector,
         IOptionsMonitor<CallbackHandlerOptions> options)
     {
         _producer = producer;
         _options = options.CurrentValue;
         _channel = Channel.CreateBounded<KafkaProducerMessage<Null?, object>>(
             _options.ChannelSize);
-        _validator = validator;
+        _selector = selector;
     }
 
-    public void GetMessage(string token, object message)
+    public async Task GetMessageAsync(
+        HttpRequest request,
+        CancellationToken cancellationToken = default)
     {
-        _validator.ValidateToken(token, _options);
-        if (!_channel.Writer.TryWrite(new KafkaProducerMessage<Null?, object>(null, message)))
+        ParsedRequest parsedRequest = await ParsedRequest.ParseRequestAsync(request);
+        if (!parsedRequest.QueryParams.TryGetValue("type", out string? providerTypeName))
+        {
+            throw new NoProviderTypeException();
+        }
+
+        IBankingProviderStrategy strategy = _selector.GetStrategy(providerTypeName);
+        await strategy.ValidateRequestAsync(parsedRequest, cancellationToken);
+
+        if (!_channel.Writer.TryWrite(new KafkaProducerMessage<Null?, object>(null, parsedRequest.Body)))
         {
             throw new ChannelFullException(_channel.Reader.Count);
         }

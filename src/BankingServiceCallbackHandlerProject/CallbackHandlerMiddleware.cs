@@ -1,8 +1,8 @@
-using BankingServiceCallbackHandler.Exceptions;
+using BankingServiceCallbackHandlerProject.Exceptions;
 using System.Net;
 using System.Text.Json;
 
-namespace BankingServiceCallbackHandler;
+namespace BankingServiceCallbackHandlerProject;
 
 public class CallbackHandlerMiddleware
 {
@@ -31,6 +31,7 @@ public class CallbackHandlerMiddleware
         {
             InvalidTokenException => (HttpStatusCode.Forbidden, ex.Message),
             ChannelFullException => (HttpStatusCode.ServiceUnavailable, ex.Message),
+            NoProviderTypeException or NoStrategyException => (HttpStatusCode.BadRequest, ex.Message),
             _ => (HttpStatusCode.InternalServerError, "Internal server error"),
         };
 

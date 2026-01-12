@@ -1,4 +1,4 @@
-namespace BankingServiceCallbackHandler.Exceptions;
+namespace BankingServiceCallbackHandlerProject.Exceptions;
 
 public class InvalidTokenException : BankingServiceCallbackHandlerException
 {

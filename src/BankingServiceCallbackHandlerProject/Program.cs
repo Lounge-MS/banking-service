@@ -1,4 +1,4 @@
-using BankingServiceCallbackHandler;
+using BankingServiceCallbackHandlerProject;
 using DotNetEnv;
 
 WebApplicationBuilder builder = WebApplication.CreateBuilder();
@@ -6,12 +6,12 @@ Env.Load("dev.env");
 builder.Configuration.AddJsonFile("appsettings.json");
 
 builder.Services
-    .AddCallbackHandlerRequiredServices()
-    .AddControllers();
-
-builder.Services
     .Configure<CallbackHandlerOptions>(
         builder.Configuration.GetSection("CallbackHandler"));
+
+builder.Services
+    .AddCallbackHandlerRequiredServices()
+    .AddControllers();
 
 builder.Services
     .AddCallbackHandlerKafkaProducer(

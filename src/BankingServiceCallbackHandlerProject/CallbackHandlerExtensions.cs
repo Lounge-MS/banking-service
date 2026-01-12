@@ -1,8 +1,9 @@
+using BankingServiceCallbackHandlerProject.ProviderStrategies;
 using BankingServiceProject.SharedProject.Cryptography;
 using Confluent.Kafka;
 using Itmo.Dev.Platform.Kafka.Extensions;
 
-namespace BankingServiceCallbackHandler;
+namespace BankingServiceCallbackHandlerProject;
 
 public static class CallbackHandlerExtensions
 {
@@ -28,9 +29,16 @@ public static class CallbackHandlerExtensions
         return serviceCollection
             .AddSingleton<ISecretsProvider, EnvironmentSecretsProvider>()
             .AddSingleton<CallbackHandlerService>()
-            .AddSingleton<BankingProviderValidator>()
-            .AddHostedService(
-                provider => provider.GetRequiredService<CallbackHandlerService>());
+            .AddHostedService(provider => provider.GetRequiredService<CallbackHandlerService>())
+            .AddSingleton<BankingProviderStrategySelector>()
+            .AddStrategies();
+    }
+
+    public static IServiceCollection AddStrategies(
+        this IServiceCollection serviceCollection)
+    {
+        return serviceCollection
+            .AddSingleton<MockBankingProviderStrategy>();
     }
 
     public static void UseCallbackHandlerMiddleware(

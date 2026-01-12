@@ -98,7 +98,7 @@ public class MockBankingProvider
         FinishedRollbackStatus status,
         CancellationToken cancellationToken = default)
     {
-        RollbackedPayment closed = rollbackPayment.CloseRollback(FinishedRollbackStatus.Approved);
+        RollbackedPayment closed = rollbackPayment.CloseRollback(status);
         await SendWebhookAsync(
             rollbackPayment.ConfirmationUrl,
             rollbackPayment.ExternalIdentityToken,
