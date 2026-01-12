@@ -5,16 +5,19 @@ namespace BankingServiceProject.RepositoryProject.Repositories;
 
 public class CacheStorage<T>
 {
-    private readonly MemoryCacheEntryOptions _options;
-    private readonly string _section;
     private readonly IMemoryCache _cache;
+    private MemoryCacheEntryOptions _options;
+    private string _section;
 
     public CacheStorage(
         IMemoryCache cache,
-        IOptions<CacheStorageOptions<T>> options)
+        IOptionsMonitor<CacheStorageOptions<T>> options)
     {
-        _options = options.Value.ToMemoryCacheEntryOptions();
-        _section = options.Value.Section;
+        CacheStorageOptions<T> current = options.CurrentValue;
+        _options = current.ToMemoryCacheEntryOptions();
+        _section = current.Section;
+
+        options.OnChange(SetOptions);
         _cache = cache;
     }
 
@@ -32,6 +35,12 @@ public class CacheStorage<T>
     public void Invalidate(string keyType, string key)
     {
         _cache.Remove(CreateKey(keyType, key));
+    }
+
+    private void SetOptions(CacheStorageOptions<T> options)
+    {
+        _options = options.ToMemoryCacheEntryOptions();
+        _section = options.Section;
     }
 
     private string CreateKey(string keyType, string key)

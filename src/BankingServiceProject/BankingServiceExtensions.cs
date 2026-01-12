@@ -12,8 +12,8 @@ public static class BankingServiceExtensions
         this IServiceProvider serviceProvider)
     {
         return new Uri(serviceProvider
-            .GetRequiredService<IOptions<MockBankingProviderStrategyOptions>>()
-            .Value
+            .GetRequiredService<IOptionsMonitor<MockBankingProviderStrategyOptions>>()
+            .CurrentValue
             .BaseUrl);
     }
 

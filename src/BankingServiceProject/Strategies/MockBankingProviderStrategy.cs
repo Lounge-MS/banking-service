@@ -18,13 +18,13 @@ public class MockBankingProviderStrategy : IBankingProviderStrategy
 
     public MockBankingProviderStrategy(
         IMockBankingProviderClient client,
-        IOptions<MockBankingProviderStrategyOptions> options,
+        IOptionsMonitor<MockBankingProviderStrategyOptions> options,
         AesEncryptor encryptor,
         ISecretsProvider secretsProvider,
         JsonSerializerOptions jsonOptions)
     {
         _client = client;
-        _options = options.Value;
+        _options = options.CurrentValue;
         _encryptor = encryptor;
         _secretsProvider = secretsProvider;
         _jsonOptions = jsonOptions;

@@ -16,10 +16,10 @@ public class CallbackHandlerService : BackgroundService
     public CallbackHandlerService(
         IKafkaMessageProducer<Null?, object> producer,
         BankingProviderValidator validator,
-        IOptions<CallbackHandlerOptions> options)
+        IOptionsMonitor<CallbackHandlerOptions> options)
     {
         _producer = producer;
-        _options = options.Value;
+        _options = options.CurrentValue;
         _channel = Channel.CreateBounded<KafkaProducerMessage<Null?, object>>(
             _options.ChannelSize);
         _validator = validator;

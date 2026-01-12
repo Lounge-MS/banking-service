@@ -15,10 +15,10 @@ public class MockBankingProvider
     private readonly IHttpClientFactory _clientFactory;
 
     public MockBankingProvider(
-        IOptions<MockBankingOptions> options,
+        IOptionsMonitor<MockBankingOptions> options,
         IHttpClientFactory httpClientFactory)
     {
-        _options = options.Value;
+        _options = options.CurrentValue;
         _clientFactory = httpClientFactory;
     }
 
