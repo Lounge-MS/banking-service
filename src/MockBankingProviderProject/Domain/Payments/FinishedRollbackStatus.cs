@@ -1,4 +1,4 @@
-namespace BankingServiceProject.MockBankingProviderProject.Domain;
+namespace BankingServiceProject.MockBankingProviderProject.Domain.Payments;
 
 public enum FinishedRollbackStatus
 {
