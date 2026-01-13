@@ -56,61 +56,6 @@ public class MockBankingProvider
         };
     }
 
-    public void StartRollback(
-        StartRollbackRequest request,
-        string externalIdentityToken,
-        CancellationToken cancellationToken = default)
-    {
-        MockPayment payment =
-            _payments.GetValueOrDefault(request.PaymentId) ?? throw new PaymentNotFoundException();
-        payment.ValidateToken(externalIdentityToken);
-
-        if (payment is not ClosedPayment closedPayment)
-        {
-            throw new IllegalStateException(nameof(ClosedPayment), payment.GetType().Name);
-        }
-
-        _payments[payment.Id] = closedPayment.Rollback(request.ConfirmationUrl, request.IdentityToken);
-        _ = ExecuteRollbackAsync(
-            payment.Id,
-            cancellationToken);
-    }
-
-    private async Task ExecuteRollbackAsync(
-        string paymentId,
-        CancellationToken cancellationToken = default)
-    {
-        await Task.Delay(_options.DelayMs, cancellationToken);
-        MockPayment payment =
-            _payments.GetValueOrDefault(paymentId) ?? throw new PaymentNotFoundException();
-
-        if (payment is not RollbackPayment rollbackPayment)
-        {
-            throw new IllegalStateException(nameof(RollbackedPayment), payment.GetType().Name);
-        }
-
-        FinishedRollbackStatus status = _options.AllowRollbacks
-            ? FinishedRollbackStatus.Approved
-            : FinishedRollbackStatus.Declined;
-
-        await CloseRollbackAsync(rollbackPayment, status, cancellationToken);
-    }
-
-    private async Task CloseRollbackAsync(
-        RollbackPayment rollbackPayment,
-        FinishedRollbackStatus status,
-        CancellationToken cancellationToken = default)
-    {
-        RollbackedPayment closed = rollbackPayment.CloseRollback(status);
-        await SendWebhookAsync(
-            rollbackPayment.ConfirmationUrl,
-            rollbackPayment.ExternalIdentityToken,
-            new FinishedRollbackWebhookRequest(
-                closed.Id,
-                closed.Status),
-            cancellationToken);
-    }
-
     private async Task<FinishedPaymentStatus> ExecutePaymentAsync(
         string paymentId,
         CancellationToken cancellationToken = default)
