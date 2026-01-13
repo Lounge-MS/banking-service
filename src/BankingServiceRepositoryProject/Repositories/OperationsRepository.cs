@@ -128,7 +128,7 @@ public class OperationsRepository
         NpgsqlCommand command = _dataSource.CreateCommand();
         const string sql =
             """
-            UPDATE TABLE operations
+            UPDATE operations
             SET status = :status
             WHERE id = :id
             RETURNING *;

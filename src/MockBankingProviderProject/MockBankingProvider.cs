@@ -124,7 +124,7 @@ public class MockBankingProvider
             throw new IllegalStateException(nameof(UnfinishedPayment), payment.GetType().Name);
         }
 
-        FinishedPaymentStatus status = _options.AllowPayment
+        FinishedPaymentStatus status = _options.AllowPayments
             ? FinishedPaymentStatus.Approved
             : FinishedPaymentStatus.Declined;
 

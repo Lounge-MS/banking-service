@@ -77,5 +77,6 @@ public class BankingService
                 .CreateAsyncEnumerable();
 
         await _producer.ProduceAsync(flow, cancellationToken);
+        await _operationsRepository.UpdateStatusAsync(paymentId, message.Status, cancellationToken);
     }
 }
