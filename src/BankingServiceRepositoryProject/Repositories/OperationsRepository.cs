@@ -3,7 +3,6 @@ using BankingServiceProject.RepositoryProject.Domain;
 using BankingServiceProject.RepositoryProject.Exceptions;
 using Npgsql;
 using NpgsqlTypes;
-using System.Text.Json;
 
 namespace BankingServiceProject.RepositoryProject.Repositories;
 
@@ -11,16 +10,13 @@ public class OperationsRepository
 {
     private readonly NpgsqlDataSource _dataSource;
     private readonly CacheStorage<OperationEntity> _cacheStorage;
-    private readonly JsonSerializerOptions _jsonOptions;
 
     public OperationsRepository(
         NpgsqlDataSource dataSource,
-        CacheStorage<OperationEntity> cacheStorage,
-        JsonSerializerOptions jsonOptions)
+        CacheStorage<OperationEntity> cacheStorage)
     {
         _dataSource = dataSource;
         _cacheStorage = cacheStorage;
-        _jsonOptions = jsonOptions;
     }
 
     public async Task<OperationEntity> GetOperationAsync(
@@ -72,7 +68,7 @@ public class OperationsRepository
     public async Task<OperationEntity> CreateOperationAsync(
         string id,
         string idempotencyKey,
-        IMetainfo metainfo,
+        string metainfo,
         Uri paymentUrl,
         decimal amount,
         BankingProviderType bankingProviderType,
@@ -97,7 +93,7 @@ public class OperationsRepository
 
         command.Parameters.AddWithValue("id", id);
         command.Parameters.AddWithValue("idempotency_key", idempotencyKey);
-        command.Parameters.AddWithValue("metainfo", NpgsqlDbType.Jsonb, metainfo.Serialize(_jsonOptions));
+        command.Parameters.AddWithValue("metainfo", NpgsqlDbType.Jsonb, metainfo);
         command.Parameters.AddWithValue("payment_url", paymentUrl.ToString());
         command.Parameters.AddWithValue("amount", amount);
         command.Parameters.AddWithValue("banking_provider", bankingProviderType.ToDbValue());

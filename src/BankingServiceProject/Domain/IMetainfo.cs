@@ -1,11 +1,11 @@
 using System.Text.Json;
 
-namespace BankingServiceProject.RepositoryProject.Domain;
+namespace BankingServiceProject.Domain;
 
 public interface IMetainfo
 {
     string Serialize(JsonSerializerOptions options)
     {
-        return JsonSerializer.Serialize(this, options);
+        return JsonSerializer.Serialize(this, GetType(), options);
     }
 }
