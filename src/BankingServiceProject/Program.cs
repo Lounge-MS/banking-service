@@ -1,11 +1,10 @@
-#pragma warning disable CA1506
 #pragma warning disable ASP0000
 using BankingServiceProject;
+using BankingServiceProject.CommonProject.Security.Cryptography;
+using BankingServiceProject.CommonProject.Security.Secrets;
 using BankingServiceProject.RepositoryProject;
 using BankingServiceProject.RepositoryProject.Domain;
 using BankingServiceProject.RepositoryProject.Repositories;
-using BankingServiceProject.SharedProject.Security.Cryptography;
-using BankingServiceProject.SharedProject.Security.Secrets;
 using DotNetEnv;
 using System.Text.Json;
 

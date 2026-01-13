@@ -1,6 +1,6 @@
 using Microsoft.Extensions.DependencyInjection;
 
-namespace BankingServiceProject.SharedProject.Security.Cryptography;
+namespace BankingServiceProject.CommonProject.Security.Cryptography;
 
 public static class CryptographyExtensions
 {

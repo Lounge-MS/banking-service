@@ -1,4 +1,4 @@
-namespace BankingServiceProject.SharedProject.Security.Secrets;
+namespace BankingServiceProject.CommonProject.Security.Secrets;
 
 public interface ISecretsProvider
 {

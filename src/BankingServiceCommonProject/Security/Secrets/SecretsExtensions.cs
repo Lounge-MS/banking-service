@@ -1,6 +1,6 @@
 using Microsoft.Extensions.DependencyInjection;
 
-namespace BankingServiceProject.SharedProject.Security.Secrets;
+namespace BankingServiceProject.CommonProject.Security.Secrets;
 
 public static class SecretsExtensions
 {

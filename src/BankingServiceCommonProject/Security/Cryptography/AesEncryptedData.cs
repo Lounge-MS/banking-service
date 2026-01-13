@@ -1,4 +1,4 @@
-namespace BankingServiceProject.SharedProject.Security.Cryptography;
+namespace BankingServiceProject.CommonProject.Security.Cryptography;
 
 public record AesEncryptedData(
     byte[] EncryptedData,

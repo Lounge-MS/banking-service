@@ -1,9 +1,9 @@
+using BankingServiceProject.CommonProject.Security.Cryptography;
+using BankingServiceProject.CommonProject.Security.Secrets;
 using BankingServiceProject.Domain;
 using BankingServiceProject.Exceptions;
 using BankingServiceProject.ProviderStrategies.Mock.Dto;
 using BankingServiceProject.RepositoryProject.Domain;
-using BankingServiceProject.SharedProject.Security.Cryptography;
-using BankingServiceProject.SharedProject.Security.Secrets;
 using Microsoft.AspNetCore.Http.Extensions;
 using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
