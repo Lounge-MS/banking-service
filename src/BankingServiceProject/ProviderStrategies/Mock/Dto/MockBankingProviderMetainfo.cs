@@ -1,4 +1,4 @@
-using BankingServiceProject.Domain;
+using BankingServiceProject.RepositoryProject.Domain;
 
 namespace BankingServiceProject.ProviderStrategies.Mock.Dto;
 

@@ -1,6 +1,6 @@
 using System.Text.Json;
 
-namespace BankingServiceProject.Domain;
+namespace BankingServiceProject.RepositoryProject.Domain;
 
 public interface IMetainfo
 {

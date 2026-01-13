@@ -1,5 +1,4 @@
 using BankingServiceProject.CommonProject.Cache;
-using BankingServiceProject.Domain;
 using BankingServiceProject.RepositoryProject.Domain;
 using BankingServiceProject.RepositoryProject.Exceptions;
 using Npgsql;
