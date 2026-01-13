@@ -3,6 +3,8 @@ using BankingServiceProject.ProviderStrategies;
 using BankingServiceProject.ProviderStrategies.Mock;
 using BankingServiceProject.RepositoryProject;
 using Itmo.Dev.Platform.Kafka.Extensions;
+using Microsoft.Extensions.Options;
+using Refit;
 
 namespace BankingServiceProject;
 
@@ -12,9 +14,18 @@ public static class BankingServiceExtensions
         this IServiceCollection serviceCollection,
         IConfigurationSection optionSection)
     {
-        serviceCollection.AddHttpClient<IMockBankingProviderClient>();
-        serviceCollection.AddSingleton<MockBankingProviderStrategy>();
         serviceCollection.Configure<MockBankingProviderStrategyOptions>(optionSection);
+        serviceCollection
+            .AddRefitClient<IMockBankingProviderClient>()
+            .ConfigureHttpClient((sp, client) =>
+            {
+                string options = sp.GetRequiredService<IOptionsMonitor<MockBankingProviderStrategyOptions>>()
+                    .CurrentValue
+                    .BaseUrl;
+
+                client.BaseAddress = new Uri(options);
+            });
+        serviceCollection.AddSingleton<MockBankingProviderStrategy>();
         return serviceCollection;
     }
 

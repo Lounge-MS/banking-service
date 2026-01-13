@@ -4,9 +4,8 @@ using BankingServiceProject.Domain;
 using BankingServiceProject.Exceptions;
 using BankingServiceProject.ProviderStrategies.Mock.Dto;
 using BankingServiceProject.RepositoryProject.Domain;
-using Microsoft.AspNetCore.Http.Extensions;
 using Microsoft.Extensions.Options;
-using Newtonsoft.Json;
+using System.Text.Json;
 
 namespace BankingServiceProject.ProviderStrategies.Mock;
 
@@ -16,20 +15,20 @@ public class MockBankingProviderStrategy : IBankingProviderStrategy
     private readonly AesEncryptor _encryptor;
     private readonly MockBankingProviderStrategyOptions _options;
     private readonly IMockBankingProviderClient _client;
-    private readonly IHttpContextAccessor _httpContextAccessor;
+    private readonly JsonSerializerOptions _jsonOptions;
 
     public MockBankingProviderStrategy(
         IOptionsMonitor<MockBankingProviderStrategyOptions> options,
         AesEncryptor encryptor,
         ISecretsProvider secretsProvider,
         IMockBankingProviderClient client,
-        IHttpContextAccessor httpContextAccessor)
+        JsonSerializerOptions jsonOptions)
     {
         _secretsProvider = secretsProvider;
         _encryptor = encryptor;
         _options = options.CurrentValue;
         _client = client;
-        _httpContextAccessor = httpContextAccessor;
+        _jsonOptions = jsonOptions;
     }
 
     public ValueTask<PaymentCompletionMessage> ValidateAndParseRequestAsync(
@@ -46,14 +45,16 @@ public class MockBankingProviderStrategy : IBankingProviderStrategy
         }
 
         MockBankingProviderCompletedPaymentMessage? message =
-            JsonConvert.DeserializeObject<MockBankingProviderCompletedPaymentMessage>(request.Body);
+            JsonSerializer.Deserialize<MockBankingProviderCompletedPaymentMessage>(
+                request.Body,
+                _jsonOptions);
 
         if (message == null)
         {
             throw new InvalidMessageException();
         }
 
-        OperationStatus status = message.OperationResult switch
+        OperationStatus status = message.Status switch
         {
             "Approved" => OperationStatus.Completed,
             "Declined" => OperationStatus.Cancelled,
@@ -69,8 +70,7 @@ public class MockBankingProviderStrategy : IBankingProviderStrategy
         decimal amount,
         CancellationToken cancellationToken = default)
     {
-        string baseUrl = _httpContextAccessor.HttpContext?.Request.GetDisplayUrl() ?? throw new InvalidOperationException();
-        Uri url = GenerateWebhookUrl(id, baseUrl);
+        Uri url = GenerateWebhookUrl(id, _options.BankingServiceUrl);
 
         var request = new MockBankingProviderStartPaymentRequest(
             amount,

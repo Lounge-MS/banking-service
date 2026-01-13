@@ -13,13 +13,16 @@ public class MockBankingProvider
     private readonly ConcurrentDictionary<string, MockPayment> _payments = new();
     private readonly MockBankingOptions _options;
     private readonly IHttpClientFactory _clientFactory;
+    private readonly JsonSerializerOptions _jsonOptions;
 
     public MockBankingProvider(
         IOptionsMonitor<MockBankingOptions> options,
-        IHttpClientFactory httpClientFactory)
+        IHttpClientFactory httpClientFactory,
+        JsonSerializerOptions jsonOptions)
     {
         _options = options.CurrentValue;
         _clientFactory = httpClientFactory;
+        _jsonOptions = jsonOptions;
     }
 
     public ValueTask<StartPaymentResponse> StartPaymentAsync(
@@ -156,7 +159,7 @@ public class MockBankingProvider
             client.DefaultRequestHeaders.Add("X-Identity-Token", identityToken);
 
             using var content = new StringContent(
-                JsonSerializer.Serialize(body),
+                JsonSerializer.Serialize(body, _jsonOptions),
                 Encoding.UTF8,
                 "application/json");
             HttpResponseMessage response = await client.PostAsync(url, content, cancellationToken);
@@ -164,6 +167,10 @@ public class MockBankingProvider
             {
                 throw new WebhookErrorException(response.StatusCode);
             }
+        }
+        catch (WebhookErrorException)
+        {
+            throw;
         }
         catch (HttpRequestException exception)
         {

@@ -8,47 +8,50 @@ using BankingServiceProject.RepositoryProject.Repositories;
 using DotNetEnv;
 using System.Text.Json;
 
+WebApplicationBuilder builder = WebApplication.CreateBuilder();
+
 Env.Load("dev.env");
-var configurationBuilder = new ConfigurationBuilder();
-configurationBuilder
+builder.Configuration
     .AddJsonFile("appsettings.json")
     .AddEnvironmentVariables();
 
-IConfigurationRoot config = configurationBuilder.Build();
-
-var serviceCollection = new ServiceCollection();
-serviceCollection.AddSingleton<IConfiguration>(config);
-
 var secretsProvider = new EnvironmentSecretsProvider();
 
-serviceCollection
+builder.Services
     .AddSecretsProvider(secretsProvider)
     .AddAesEncryptor();
 
-serviceCollection.AddSingleton(new JsonSerializerOptions
+builder.Services.AddSingleton(new JsonSerializerOptions
 {
    PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
    DictionaryKeyPolicy = JsonNamingPolicy.CamelCase,
    WriteIndented = false,
+   PropertyNameCaseInsensitive = true,
 });
 
 string connectionString = secretsProvider.GetSecretString("POSTGRES_CONNECTION_STRING");
 
-serviceCollection
+builder.Services
     .AddBankingServiceRepositoryMigrations(connectionString)
     .AddBankingServiceKafkaProducer(
-        config.GetSection("Kafka"),
-        config.GetSection("Kafka:Producer:Message"))
-    .AddMockBankingProviderStrategy(config.GetSection("BankingProviders:Mock"))
-    .AddBankingServiceServices(connectionString);
+        builder.Configuration.GetSection("Kafka"),
+        builder.Configuration.GetSection("Kafka:Producer:Message"))
+    .AddMockBankingProviderStrategy(builder.Configuration.GetSection("BankingProviders:Mock"))
+    .AddBankingServiceServices(connectionString)
+    .AddControllers();
 
-ServiceProvider sp = serviceCollection.BuildServiceProvider();
-sp.RunBankingServiceRepositoryMigrations();
+WebApplication app = builder.Build();
+app.Services.RunBankingServiceRepositoryMigrations();
+app.MapControllers();
 
-OperationsRepository repository = sp.GetRequiredService<OperationsRepository>();
-BankingService service = sp.GetRequiredService<BankingService>();
+OperationsRepository repository = app.Services.GetRequiredService<OperationsRepository>();
+BankingService service = app.Services.GetRequiredService<BankingService>();
+string guid = Guid.NewGuid().ToString();
+
 Console.WriteLine(
-    await service.StartPaymentAsync("123", 50, BankingProviderType.Mock, CancellationToken.None));
+    await service.StartPaymentAsync(guid, 50, BankingProviderType.Mock, CancellationToken.None));
 
 Console.WriteLine(
-    await repository.GetOperationByIdempotencyKeyAsync("123"));
+    await repository.GetOperationByIdempotencyKeyAsync(guid));
+
+await app.RunAsync();

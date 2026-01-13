@@ -8,4 +8,6 @@ public class MockBankingProviderStrategyOptions
     public string EncryptionSecretKeyName { get; set; } = "MOCK_ENCRYPTION_SECRET_KEY";
 
     public string BaseUrl { get; set; } = "https://example.com";
+
+    public string BankingServiceUrl { get; set; } = "https://example.com";
 }

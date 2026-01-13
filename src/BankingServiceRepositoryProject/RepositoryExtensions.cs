@@ -50,7 +50,7 @@ public static class RepositoryExtensions
     }
 
     public static void RunBankingServiceRepositoryMigrations(
-        this ServiceProvider serviceProvider)
+        this IServiceProvider serviceProvider)
     {
         IMigrationRunner runner = serviceProvider.GetRequiredService<IMigrationRunner>();
         runner.MigrateUp();
@@ -60,7 +60,9 @@ public static class RepositoryExtensions
         this IServiceCollection serviceCollection,
         string connectionString)
     {
+        NpgsqlDataSource dataSource = new NpgsqlDataSourceBuilder(connectionString).Build();
         return serviceCollection
+            .AddSingleton(dataSource)
             .AddCacheStorage<OperationEntity>()
             .AddSingleton<OperationsRepository>();
     }

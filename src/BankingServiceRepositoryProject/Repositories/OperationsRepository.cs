@@ -83,12 +83,12 @@ public class OperationsRepository
             """
             INSERT INTO operations
             (
-                id, idempotency_key, external_id, metainfo,
+                id, idempotency_key, metainfo,
                 payment_url, amount, banking_provider
             )
             VALUES
             (
-                :id, :idempotency_key, :external_id, :metainfo,
+                :id, :idempotency_key, :metainfo,
                 :payment_url, :amount, :banking_provider
             )
             RETURNING *;
@@ -134,7 +134,7 @@ public class OperationsRepository
             """
             UPDATE TABLE operations
             SET status = :status
-            WHERE id = :id;
+            WHERE id = :id
             RETURNING *;
             """;
         command.CommandText = sql;

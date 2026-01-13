@@ -39,7 +39,6 @@ public class ExceptionHandlingMiddleware
         var error = new
         {
             error = message,
-            type = ex.GetType().Name,
         };
 
         context.Response.ContentType = "application/json";
