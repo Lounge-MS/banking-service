@@ -1,4 +1,3 @@
-#pragma warning disable ASP0000
 using BankingServiceProject;
 using BankingServiceProject.CommonProject.Security.Cryptography;
 using BankingServiceProject.CommonProject.Security.Secrets;
@@ -6,7 +5,6 @@ using BankingServiceProject.RepositoryProject;
 using BankingServiceProject.RepositoryProject.Domain;
 using BankingServiceProject.RepositoryProject.Repositories;
 using DotNetEnv;
-using System.Text.Json;
 
 WebApplicationBuilder builder = WebApplication.CreateBuilder();
 
@@ -21,14 +19,6 @@ builder.Services
     .AddSecretsProvider(secretsProvider)
     .AddAesEncryptor();
 
-builder.Services.AddSingleton(new JsonSerializerOptions
-{
-   PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-   DictionaryKeyPolicy = JsonNamingPolicy.CamelCase,
-   WriteIndented = false,
-   PropertyNameCaseInsensitive = true,
-});
-
 string connectionString = secretsProvider.GetSecretString("POSTGRES_CONNECTION_STRING");
 
 builder.Services
@@ -37,7 +27,9 @@ builder.Services
         builder.Configuration.GetSection("Kafka"),
         builder.Configuration.GetSection("Kafka:Producer:Message"))
     .AddMockBankingProviderStrategy(builder.Configuration.GetSection("BankingProviders:Mock"))
-    .AddBankingServiceServices(connectionString)
+    .AddBankingServiceServices(
+        connectionString,
+        builder.Configuration.GetSection("BankingService"))
     .AddControllers();
 
 WebApplication app = builder.Build();

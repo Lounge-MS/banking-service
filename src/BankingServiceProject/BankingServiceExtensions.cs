@@ -5,6 +5,7 @@ using BankingServiceProject.RepositoryProject;
 using Itmo.Dev.Platform.Kafka.Extensions;
 using Microsoft.Extensions.Options;
 using Refit;
+using System.Text.Json;
 
 namespace BankingServiceProject;
 
@@ -47,12 +48,22 @@ public static class BankingServiceExtensions
 
     public static IServiceCollection AddBankingServiceServices(
         this IServiceCollection serviceCollection,
-        string databaseConnectionString)
+        string databaseConnectionString,
+        IConfigurationSection configurationSection)
     {
         return serviceCollection
+            .AddSingleton(new JsonSerializerOptions
+            {
+                PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+                DictionaryKeyPolicy = JsonNamingPolicy.CamelCase,
+                WriteIndented = false,
+                PropertyNameCaseInsensitive = true,
+            })
             .AddBankingServiceRepositoryServices(databaseConnectionString)
             .AddSingleton<BankingService>()
-            .AddSingleton<BankingProviderStrategySelector>();
+            .AddSingleton<BankingProviderStrategySelector>()
+            .AddOptions()
+            .Configure<BankingServiceOptions>(configurationSection);
     }
 
     public static void UseBankingServiceMiddleware(

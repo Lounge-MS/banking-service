@@ -14,8 +14,10 @@ builder.Services
     .AddHttpClient()
     .AddControllers();
 
-builder.Services.Configure<MockBankingOptions>(
-    builder.Configuration.GetSection("Configuration"));
+builder.Services
+    .AddOptions()
+    .Configure<MockBankingOptions>(
+        builder.Configuration.GetSection("Configuration"));
 builder.Services.AddSingleton<MockBankingProvider>();
 
 WebApplication app = builder.Build();

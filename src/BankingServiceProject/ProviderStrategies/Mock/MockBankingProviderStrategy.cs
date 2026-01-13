@@ -68,9 +68,10 @@ public class MockBankingProviderStrategy : IBankingProviderStrategy
     public async Task<PaymentCreationResponse> StartPaymentAsync(
         string id,
         decimal amount,
+        string webhookBaseUrl,
         CancellationToken cancellationToken = default)
     {
-        Uri url = GenerateWebhookUrl(id, _options.BankingServiceUrl);
+        Uri url = GenerateWebhookUrl(id, webhookBaseUrl);
 
         var request = new MockBankingProviderStartPaymentRequest(
             amount,

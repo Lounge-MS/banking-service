@@ -14,5 +14,6 @@ public interface IBankingProviderStrategy
     Task<PaymentCreationResponse> StartPaymentAsync(
         string id,
         decimal amount,
+        string webhookBaseUrl,
         CancellationToken cancellationToken = default);
 }

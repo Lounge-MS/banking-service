@@ -5,6 +5,7 @@ using BankingServiceProject.RepositoryProject.Domain;
 using BankingServiceProject.RepositoryProject.Exceptions;
 using BankingServiceProject.RepositoryProject.Repositories;
 using Itmo.Dev.Platform.Kafka.Producer;
+using Microsoft.Extensions.Options;
 using System.Text.Json;
 
 namespace BankingServiceProject;
@@ -15,17 +16,20 @@ public class BankingService
     private readonly BankingProviderStrategySelector _selector;
     private readonly IKafkaMessageProducer<string, PaymentCompletionMessage> _producer;
     private readonly JsonSerializerOptions _jsonOptions;
+    private readonly BankingServiceOptions _options;
 
     public BankingService(
         OperationsRepository operationsRepository,
         BankingProviderStrategySelector selector,
         IKafkaMessageProducer<string, PaymentCompletionMessage> producer,
-        JsonSerializerOptions jsonOptions)
+        JsonSerializerOptions jsonOptions,
+        IOptionsMonitor<BankingServiceOptions> options)
     {
         _operationsRepository = operationsRepository;
         _selector = selector;
         _producer = producer;
         _jsonOptions = jsonOptions;
+        _options = options.CurrentValue;
     }
 
     public async Task<StartPaymentResponse> StartPaymentAsync(
@@ -39,7 +43,7 @@ public class BankingService
         {
             IBankingProviderStrategy strategy = _selector.GetStrategy(bankingProviderType);
             PaymentCreationResponse creationResponse = await strategy
-                .StartPaymentAsync(id, amount, cancellationToken);
+                .StartPaymentAsync(id, amount, _options.WebhookBaseUrl, cancellationToken);
 
             OperationEntity operation = await _operationsRepository.CreateOperationAsync(
                 id,
