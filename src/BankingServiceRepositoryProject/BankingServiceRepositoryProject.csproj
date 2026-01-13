@@ -11,4 +11,7 @@
       <PackageReference Include="Microsoft.Extensions.Caching.Memory" />
       <PackageReference Include="Npgsql" />
     </ItemGroup>
+    <ItemGroup>
+      <ProjectReference Include="..\BankingServiceCommonProject\BankingServiceCommonProject.csproj" />
+    </ItemGroup>
 </Project>

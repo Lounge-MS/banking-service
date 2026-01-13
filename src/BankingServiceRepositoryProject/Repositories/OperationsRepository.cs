@@ -1,3 +1,5 @@
+using BankingServiceProject.CommonProject.Cache;
+using BankingServiceProject.Domain;
 using BankingServiceProject.RepositoryProject.Domain;
 using BankingServiceProject.RepositoryProject.Exceptions;
 using Npgsql;
@@ -10,13 +12,16 @@ public class OperationsRepository
 {
     private readonly NpgsqlDataSource _dataSource;
     private readonly CacheStorage<OperationEntity> _cacheStorage;
+    private readonly JsonSerializerOptions _jsonOptions;
 
     public OperationsRepository(
         NpgsqlDataSource dataSource,
-        CacheStorage<OperationEntity> cacheStorage)
+        CacheStorage<OperationEntity> cacheStorage,
+        JsonSerializerOptions jsonOptions)
     {
         _dataSource = dataSource;
         _cacheStorage = cacheStorage;
+        _jsonOptions = jsonOptions;
     }
 
     public async Task<OperationEntity> GetOperationAsync(
@@ -66,15 +71,14 @@ public class OperationsRepository
     }
 
     public async Task<OperationEntity> CreateOperationAsync(
+        string id,
         string idempotencyKey,
-        string? externalId,
-        JsonDocument metainfo,
+        IMetainfo metainfo,
         Uri paymentUrl,
         decimal amount,
-        BankingProvider bankingProvider,
+        BankingProviderType bankingProviderType,
         CancellationToken cancellationToken = default)
     {
-        string id = Guid.NewGuid().ToString();
         NpgsqlCommand command = _dataSource.CreateCommand();
         const string sql =
             """
@@ -94,11 +98,10 @@ public class OperationsRepository
 
         command.Parameters.AddWithValue("id", id);
         command.Parameters.AddWithValue("idempotency_key", idempotencyKey);
-        command.Parameters.AddWithNullableValue("external_id", externalId);
-        command.Parameters.AddWithValue("metainfo", NpgsqlDbType.Jsonb, metainfo);
+        command.Parameters.AddWithValue("metainfo", NpgsqlDbType.Jsonb, metainfo.Serialize(_jsonOptions));
         command.Parameters.AddWithValue("payment_url", paymentUrl.ToString());
         command.Parameters.AddWithValue("amount", amount);
-        command.Parameters.AddWithValue("banking_provider", bankingProvider.ToDbValue());
+        command.Parameters.AddWithValue("banking_provider", bankingProviderType.ToDbValue());
 
         try
         {

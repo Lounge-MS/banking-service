@@ -1,30 +1,67 @@
-using BankingServiceProject.Clients;
-using BankingServiceProject.Strategies;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Options;
-using Refit;
+using BankingServiceProject.Domain;
+using BankingServiceProject.ProviderStrategies;
+using BankingServiceProject.ProviderStrategies.Mock;
+using BankingServiceProject.RepositoryProject;
+using Itmo.Dev.Platform.Kafka.Extensions;
 
 namespace BankingServiceProject;
 
 public static class BankingServiceExtensions
 {
-    public static Uri GetMockBaseUrl(
-        this IServiceProvider serviceProvider)
+    public static IServiceCollection AddMockBankingProviderStrategy(
+        this IServiceCollection serviceCollection,
+        IConfigurationSection optionSection)
     {
-        return new Uri(serviceProvider
-            .GetRequiredService<IOptionsMonitor<MockBankingProviderStrategyOptions>>()
-            .CurrentValue
-            .BaseUrl);
+        serviceCollection.AddHttpClient<IMockBankingProviderClient>();
+        serviceCollection.AddSingleton<MockBankingProviderStrategy>();
+        serviceCollection.Configure<MockBankingProviderStrategyOptions>(optionSection);
+        return serviceCollection;
     }
 
-    public static IServiceCollection AddMockClient(
-        this IServiceCollection serviceCollection)
+    public static IServiceCollection AddBankingServiceKafkaProducer(
+        this IServiceCollection serviceCollection,
+        IConfigurationSection kafkaSection,
+        IConfigurationSection kafkaMessageSection)
     {
-        serviceCollection
-            .AddRefitClient<IMockBankingProviderClient>()
-            .ConfigureHttpClient(
-                (sp, c) => c.BaseAddress = sp.GetMockBaseUrl());
+        return serviceCollection.AddPlatformKafka(
+            selector => selector
+                .ConfigureOptions(kafkaSection)
+                .AddProducer(b => b
+                    .WithKey<string>()
+                    .WithValue<PaymentCompletionMessage>()
+                    .WithConfiguration(kafkaMessageSection)
+                    .SerializeKeyWithNewtonsoft()
+                    .SerializeValueWithNewtonsoft()));
+    }
 
-        return serviceCollection;
+    public static IServiceCollection AddBankingServiceServices(
+        this IServiceCollection serviceCollection,
+        string databaseConnectionString)
+    {
+        return serviceCollection
+            .AddBankingServiceRepositoryServices(databaseConnectionString)
+            .AddSingleton<BankingService>()
+            .AddSingleton<BankingProviderStrategySelector>();
+    }
+
+    public static void UseBankingServiceMiddleware(
+        this IApplicationBuilder app)
+    {
+        app.UseMiddleware<BankingServiceMiddleware>();
+    }
+
+    public static IAsyncEnumerable<T> CreateAsyncEnumerable<T>(this T obj)
+    {
+        /*
+            Раньше в коде была красивая реализация background сервиса, публикующего события
+            на канале с асинхронной публикацией.
+            Потом я понял, что мне нужен ответ от Kafka СРАЗУ ЖЕ для синхронного
+            ответа с ошибкой банкинг провайдеру (если например, Kafka легла, или не удалось
+            отправить сообщение).
+            Вообще по хорошему на Itmo.Dev.PlatformKafka можно issue кинуть, чтобы была
+            добавлена поддержка отправки одного сообщения для таких случаев. Даже в примерах
+            в доках делают не канал, а создают IAsyncEnumerable из обычного IEnumerable.
+        */
+        return new[] { obj }.ToAsyncEnumerable();
     }
 }

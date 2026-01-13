@@ -1,3 +1,9 @@
+using BankingServiceProject.CommonProject.Cache;
+using BankingServiceProject.RepositoryProject.Domain;
+using BankingServiceProject.RepositoryProject.Migrations;
+using BankingServiceProject.RepositoryProject.Repositories;
+using FluentMigrator.Runner;
+using Microsoft.Extensions.DependencyInjection;
 using Npgsql;
 
 namespace BankingServiceProject.RepositoryProject;
@@ -28,5 +34,34 @@ public static class RepositoryExtensions
         object? nullableValue)
     {
         return parameters.AddWithValue(parameterName, nullableValue ?? DBNull.Value);
+    }
+
+    public static IServiceCollection AddBankingServiceRepositoryMigrations(
+        this IServiceCollection serviceCollection,
+        string connectionString)
+    {
+        return serviceCollection
+            .AddFluentMigratorCore()
+            .ConfigureRunner(r => r
+                .AddPostgres()
+                .WithGlobalConnectionString(connectionString)
+                .ScanIn(typeof(CreateOperationsTable).Assembly)
+                .For.Migrations());
+    }
+
+    public static void RunBankingServiceRepositoryMigrations(
+        this ServiceProvider serviceProvider)
+    {
+        IMigrationRunner runner = serviceProvider.GetRequiredService<IMigrationRunner>();
+        runner.MigrateUp();
+    }
+
+    public static IServiceCollection AddBankingServiceRepositoryServices(
+        this IServiceCollection serviceCollection,
+        string connectionString)
+    {
+        return serviceCollection
+            .AddCacheStorage<OperationEntity>()
+            .AddSingleton<OperationsRepository>();
     }
 }
