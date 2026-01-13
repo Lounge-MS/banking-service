@@ -1,9 +1,9 @@
-using BankingServiceCallbackHandlerProject.Domain;
-using BankingServiceCallbackHandlerProject.Exceptions;
+using BankingServiceProject.ExternalConnectorProject.Domain;
+using BankingServiceProject.ExternalConnectorProject.Exceptions;
 using BankingServiceProject.SharedProject.Cryptography;
 using Microsoft.Extensions.Options;
 
-namespace BankingServiceCallbackHandlerProject.ProviderStrategies;
+namespace BankingServiceProject.ExternalConnectorProject.ProviderStrategies;
 
 public class MockBankingProviderStrategy : IBankingProviderStrategy
 {

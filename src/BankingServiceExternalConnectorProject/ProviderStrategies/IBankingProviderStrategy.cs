@@ -1,6 +1,6 @@
-using BankingServiceCallbackHandlerProject.Domain;
+using BankingServiceProject.ExternalConnectorProject.Domain;
 
-namespace BankingServiceCallbackHandlerProject.ProviderStrategies;
+namespace BankingServiceProject.ExternalConnectorProject.ProviderStrategies;
 
 public interface IBankingProviderStrategy
 {

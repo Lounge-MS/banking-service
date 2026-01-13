@@ -1,5 +1,5 @@
-using BankingServiceCallbackHandlerProject;
-using BankingServiceCallbackHandlerProject.ProviderStrategies;
+using BankingServiceProject.ExternalConnectorProject;
+using BankingServiceProject.ExternalConnectorProject.ProviderStrategies;
 using DotNetEnv;
 
 WebApplicationBuilder builder = WebApplication.CreateBuilder();
@@ -9,7 +9,7 @@ builder.Configuration.AddJsonFile("appsettings.json");
 builder.Services
     .Configure<MockBankingProviderStrategyOptions>(
         builder.Configuration.GetSection("BankingProviderStrategies:Mock"))
-    .Configure<CallbackHandlerOptions>(
+    .Configure<ExternalConnectorOptions>(
         builder.Configuration.GetSection("CallbackHandler"));
 
 builder.Services

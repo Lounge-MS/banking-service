@@ -1,10 +1,10 @@
-using BankingServiceCallbackHandlerProject.ProviderStrategies;
+using BankingServiceProject.ExternalConnectorProject.ProviderStrategies;
 using BankingServiceProject.SharedProject.Cryptography;
 using Itmo.Dev.Platform.Kafka.Extensions;
 
-namespace BankingServiceCallbackHandlerProject;
+namespace BankingServiceProject.ExternalConnectorProject;
 
-public static class CallbackHandlerExtensions
+public static class ExternalConnectorExtensions
 {
     public static IServiceCollection AddCallbackHandlerKafkaProducer(
         this IServiceCollection serviceCollection,
@@ -27,8 +27,8 @@ public static class CallbackHandlerExtensions
     {
         return serviceCollection
             .AddSingleton<ISecretsProvider, EnvironmentSecretsProvider>()
-            .AddSingleton<CallbackHandlerService>()
-            .AddHostedService(provider => provider.GetRequiredService<CallbackHandlerService>())
+            .AddSingleton<ExternalConnectorService>()
+            .AddHostedService(provider => provider.GetRequiredService<ExternalConnectorService>())
             .AddSingleton<BankingProviderStrategySelector>()
             .AddStrategies();
     }
@@ -43,6 +43,6 @@ public static class CallbackHandlerExtensions
     public static void UseCallbackHandlerMiddleware(
         this IApplicationBuilder app)
     {
-        app.UseMiddleware<CallbackHandlerMiddleware>();
+        app.UseMiddleware<ExternalConnectorMiddleware>();
     }
 }

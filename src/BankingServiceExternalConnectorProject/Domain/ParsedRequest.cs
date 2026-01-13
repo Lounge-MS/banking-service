@@ -1,6 +1,6 @@
 using System.Text;
 
-namespace BankingServiceCallbackHandlerProject.Domain;
+namespace BankingServiceProject.ExternalConnectorProject.Domain;
 
 public record ParsedRequest(
     Dictionary<string, string> Headers,

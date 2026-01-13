@@ -1,23 +1,23 @@
-using BankingServiceCallbackHandlerProject.Domain;
-using BankingServiceCallbackHandlerProject.Exceptions;
-using BankingServiceCallbackHandlerProject.ProviderStrategies;
+using BankingServiceProject.ExternalConnectorProject.Domain;
+using BankingServiceProject.ExternalConnectorProject.Exceptions;
+using BankingServiceProject.ExternalConnectorProject.ProviderStrategies;
 using Itmo.Dev.Platform.Kafka.Producer;
 using Microsoft.Extensions.Options;
 using System.Threading.Channels;
 
-namespace BankingServiceCallbackHandlerProject;
+namespace BankingServiceProject.ExternalConnectorProject;
 
-public class CallbackHandlerService : BackgroundService
+public class ExternalConnectorService : BackgroundService
 {
     private readonly IKafkaMessageProducer<string, string> _producer;
     private readonly Channel<KafkaProducerMessage<string, string>> _channel;
-    private readonly CallbackHandlerOptions _options;
+    private readonly ExternalConnectorOptions _options;
     private readonly BankingProviderStrategySelector _selector;
 
-    public CallbackHandlerService(
+    public ExternalConnectorService(
         IKafkaMessageProducer<string, string> producer,
         BankingProviderStrategySelector selector,
-        IOptionsMonitor<CallbackHandlerOptions> options)
+        IOptionsMonitor<ExternalConnectorOptions> options)
     {
         _producer = producer;
         _options = options.CurrentValue;

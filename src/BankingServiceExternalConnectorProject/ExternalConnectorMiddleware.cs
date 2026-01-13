@@ -1,14 +1,14 @@
-using BankingServiceCallbackHandlerProject.Exceptions;
+using BankingServiceProject.ExternalConnectorProject.Exceptions;
 using System.Net;
 using System.Text.Json;
 
-namespace BankingServiceCallbackHandlerProject;
+namespace BankingServiceProject.ExternalConnectorProject;
 
-public class CallbackHandlerMiddleware
+public class ExternalConnectorMiddleware
 {
     private readonly RequestDelegate _next;
 
-    public CallbackHandlerMiddleware(RequestDelegate next)
+    public ExternalConnectorMiddleware(RequestDelegate next)
     {
         _next = next;
     }

@@ -1,7 +1,7 @@
-namespace BankingServiceCallbackHandlerProject.Exceptions;
+namespace BankingServiceProject.ExternalConnectorProject.Exceptions;
 
 public class UnknownProviderTypeException
-    : BankingServiceCallbackHandlerException
+    : BankingServiceExternalConnectorException
 {
     public UnknownProviderTypeException()
         : base("Unknown banking provider type")

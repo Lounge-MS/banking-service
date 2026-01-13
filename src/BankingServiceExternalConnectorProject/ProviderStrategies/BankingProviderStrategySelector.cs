@@ -1,7 +1,7 @@
-using BankingServiceCallbackHandlerProject.Exceptions;
+using BankingServiceProject.ExternalConnectorProject.Exceptions;
 using System.Collections.Concurrent;
 
-namespace BankingServiceCallbackHandlerProject.ProviderStrategies;
+namespace BankingServiceProject.ExternalConnectorProject.ProviderStrategies;
 
 public class BankingProviderStrategySelector
 {

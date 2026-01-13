@@ -1,7 +1,7 @@
-namespace BankingServiceCallbackHandlerProject.Exceptions;
+namespace BankingServiceProject.ExternalConnectorProject.Exceptions;
 
 public class NoProviderTypeException
-    : BankingServiceCallbackHandlerException
+    : BankingServiceExternalConnectorException
 {
     public NoProviderTypeException()
         : base("No banking provider type was provided")

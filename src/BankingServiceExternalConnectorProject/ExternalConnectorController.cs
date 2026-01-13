@@ -1,14 +1,14 @@
 using Microsoft.AspNetCore.Mvc;
 
-namespace BankingServiceCallbackHandlerProject;
+namespace BankingServiceProject.ExternalConnectorProject;
 
 [ApiController]
-public class CallbackHandlerController : ControllerBase
+public class ExternalConnectorController : ControllerBase
 {
-    private readonly CallbackHandlerService _service;
+    private readonly ExternalConnectorService _service;
 
-    public CallbackHandlerController(
-        CallbackHandlerService service)
+    public ExternalConnectorController(
+        ExternalConnectorService service)
     {
         _service = service;
     }

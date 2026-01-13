@@ -1,6 +1,6 @@
 ﻿<Solution>
   <Folder Name="/src/">
-    <Project Path="src\BankingServiceCallbackHandlerProject\BankingServiceCallbackHandlerProject.csproj" Type="Classic C#" />
+    <Project Path="src\BankingServiceExternalConnectorProject\BankingServiceExternalConnectorProject.csproj" Type="Classic C#" />
     <Project Path="src\BankingServicePresentationProject\BankingServicePresentationProject.csproj" Type="Classic C#" />
     <Project Path="src\BankingServiceProject\BankingServiceProject.csproj" Type="Classic C#" />
     <Project Path="src\BankingServiceRepositoryProject\BankingServiceRepositoryProject.csproj" Type="Classic C#" />

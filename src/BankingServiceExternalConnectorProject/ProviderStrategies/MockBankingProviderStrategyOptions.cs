@@ -1,4 +1,4 @@
-namespace BankingServiceCallbackHandlerProject.ProviderStrategies;
+namespace BankingServiceProject.ExternalConnectorProject.ProviderStrategies;
 
 public class MockBankingProviderStrategyOptions
 {
