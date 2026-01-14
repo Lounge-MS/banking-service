@@ -1,5 +1,4 @@
 using BankingServiceProject.Domain;
-using BankingServiceProject.Dto;
 using BankingServiceProject.ProviderStrategies;
 using BankingServiceProject.RepositoryProject.Domain;
 using BankingServiceProject.RepositoryProject.Exceptions;
@@ -32,11 +31,18 @@ public class BankingService
         _options = options.CurrentValue;
     }
 
-    public async Task<StartPaymentResponse> StartPaymentAsync(
+    public Task<OperationEntity> GetPaymentAsync(
+        string paymentId,
+        CancellationToken cancellationToken = default)
+    {
+        return _operationsRepository.GetOperationAsync(paymentId, cancellationToken);
+    }
+
+    public async Task<OperationEntity> CreatePaymentAsync(
         string idempotencyKey,
         decimal amount,
         BankingProviderType bankingProviderType,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken = default)
     {
         string id = Guid.NewGuid().ToString();
         try
@@ -54,15 +60,14 @@ public class BankingService
                 BankingProviderType.Mock,
                 cancellationToken);
 
-            return StartPaymentResponse.FromOperation(operation);
+            return operation;
         }
         catch (IdempotencyKeyConflictException)
         {
-            return StartPaymentResponse.FromOperation(
-                await _operationsRepository
-                    .GetOperationByIdempotencyKeyAsync(
-                        idempotencyKey,
-                        cancellationToken));
+            return await _operationsRepository
+                .GetOperationByIdempotencyKeyAsync(
+                    idempotencyKey,
+                    cancellationToken);
         }
     }
 
@@ -82,5 +87,15 @@ public class BankingService
 
         await _producer.ProduceAsync(flow, cancellationToken);
         await _operationsRepository.UpdateStatusAsync(paymentId, message.Status, cancellationToken);
+    }
+
+    public async Task MarkCompensatedAsync(
+        string paymentId,
+        CancellationToken cancellationToken = default)
+    {
+        await _operationsRepository.UpdateStatusAsync(
+            paymentId,
+            OperationStatus.Compensated,
+            cancellationToken);
     }
 }

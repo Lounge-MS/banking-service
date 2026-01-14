@@ -22,7 +22,6 @@ public class CreateOperationStatusType : Migration
                 ('CREATED'),
                 ('COMPLETED'),
                 ('CANCELLED'),
-                ('COMPENSATING'),
                 ('COMPENSATED');
             """);
     }

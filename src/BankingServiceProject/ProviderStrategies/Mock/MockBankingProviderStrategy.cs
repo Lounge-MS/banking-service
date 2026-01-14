@@ -41,7 +41,7 @@ public class MockBankingProviderStrategy : IBankingProviderStrategy
         if (!request.Headers.TryGetValue("X-Identity-Token", out string? token)
             || token != _secretsProvider.GetSecretString(_options.IdentityTokenName))
         {
-            throw new InvalidTokenException();
+            throw new WebhookInvalidTokenException();
         }
 
         MockBankingProviderCompletedPaymentMessage? message =

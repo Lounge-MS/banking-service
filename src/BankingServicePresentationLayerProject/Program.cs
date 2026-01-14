@@ -1,9 +1,8 @@
 using BankingServiceProject;
 using BankingServiceProject.CommonProject.Security.Cryptography;
 using BankingServiceProject.CommonProject.Security.Secrets;
+using BankingServiceProject.PresentationLayerProject.Grpc;
 using BankingServiceProject.RepositoryProject;
-using BankingServiceProject.RepositoryProject.Domain;
-using BankingServiceProject.RepositoryProject.Repositories;
 using DotNetEnv;
 
 WebApplicationBuilder builder = WebApplication.CreateBuilder();
@@ -30,20 +29,14 @@ builder.Services
     .AddBankingServiceServices(
         connectionString,
         builder.Configuration.GetSection("BankingService"))
+    .AddGrpcPresentationLayerServices(
+        builder.Configuration.GetSection("Presentation:Grpc"))
     .AddControllers();
 
 WebApplication app = builder.Build();
+
 app.Services.RunBankingServiceRepositoryMigrations();
+app.MapGrpcPresentationLayer();
 app.MapControllers();
-
-OperationsRepository repository = app.Services.GetRequiredService<OperationsRepository>();
-BankingService service = app.Services.GetRequiredService<BankingService>();
-string guid = Guid.NewGuid().ToString();
-
-Console.WriteLine(
-    await service.StartPaymentAsync(guid, 50, BankingProviderType.Mock, CancellationToken.None));
-
-Console.WriteLine(
-    await repository.GetOperationByIdempotencyKeyAsync(guid));
 
 await app.RunAsync();

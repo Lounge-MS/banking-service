@@ -3,6 +3,9 @@ using BankingServiceProject.ProviderStrategies;
 using BankingServiceProject.ProviderStrategies.Mock;
 using BankingServiceProject.RepositoryProject;
 using Itmo.Dev.Platform.Kafka.Extensions;
+using Microsoft.AspNetCore.Builder;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using Refit;
 using System.Text.Json;
@@ -66,8 +69,7 @@ public static class BankingServiceExtensions
             .Configure<BankingServiceOptions>(configurationSection);
     }
 
-    public static void UseBankingServiceMiddleware(
-        this IApplicationBuilder app)
+    public static void UseBankingServiceMiddleware(this IApplicationBuilder app)
     {
         app.UseMiddleware<BankingServiceMiddleware>();
     }

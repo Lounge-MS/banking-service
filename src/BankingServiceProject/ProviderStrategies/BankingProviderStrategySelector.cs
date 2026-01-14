@@ -1,6 +1,7 @@
 using BankingServiceProject.Exceptions;
 using BankingServiceProject.ProviderStrategies.Mock;
 using BankingServiceProject.RepositoryProject.Domain;
+using Microsoft.Extensions.DependencyInjection;
 using System.Collections.Concurrent;
 
 namespace BankingServiceProject.ProviderStrategies;

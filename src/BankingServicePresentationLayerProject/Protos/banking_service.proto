@@ -1,0 +1,54 @@
+syntax = "proto3";
+
+package lms.blms.grpc.banking_service.v1;
+
+service BankingService {
+  rpc GetPayment(GetPaymentRequest) returns (GetPaymentResponse);
+  rpc CreatePayment(CreatePaymentRequest) returns (CreatePaymentResponse);
+  rpc MarkCompensated(MarkCompensatedRequest) returns (MarkCompensatedResponse);
+}
+
+enum BankingProviderType {
+  BANKING_PROVIDER_UNSPECIFIED = 0;
+  BANKING_PROVIDER_MOCK = 1;
+}
+
+enum PaymentStatus {
+  PAYMENT_STATUS_UNSPECIFIED = 0;
+  PAYMENT_STATUS_CREATED = 1;
+  PAYMENT_STATUS_COMPLETED = 2;
+  PAYMENT_STATUS_CANCELLED = 3;
+  PAYMENT_STATUS_COMPENSATED = 4;
+}
+
+message Payment {
+  string id = 1;
+  int32 amountInKopecks = 2;
+  string paymentUrl = 3;
+  PaymentStatus status = 4;
+  BankingProviderType provider = 5;
+}
+
+message GetPaymentRequest {
+  string id = 1;
+}
+
+message GetPaymentResponse {
+  Payment payment = 1;
+}
+
+message CreatePaymentRequest {
+  string idempotencyKey = 1;
+  int32 amountInKopecks = 2;
+  BankingProviderType provider = 3;
+}
+
+message CreatePaymentResponse {
+  Payment payment = 1;
+}
+
+message MarkCompensatedRequest {
+  string paymentId = 1;
+}
+
+message MarkCompensatedResponse {}

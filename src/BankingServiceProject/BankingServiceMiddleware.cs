@@ -1,4 +1,5 @@
 using BankingServiceProject.Exceptions;
+using Microsoft.AspNetCore.Http;
 using Refit;
 using System.Net;
 using System.Text.Json;
@@ -30,7 +31,7 @@ public class BankingServiceMiddleware
     {
         (HttpStatusCode code, string message) = ex switch
         {
-            InvalidTokenException => (HttpStatusCode.Forbidden, ex.Message),
+            WebhookInvalidTokenException => (HttpStatusCode.Forbidden, ex.Message),
             ChannelFullException => (HttpStatusCode.ServiceUnavailable, ex.Message),
             NoProviderTypeException or NoStrategyException => (HttpStatusCode.BadRequest, ex.Message),
             ApiException => (HttpStatusCode.BadGateway, ex.Message),
