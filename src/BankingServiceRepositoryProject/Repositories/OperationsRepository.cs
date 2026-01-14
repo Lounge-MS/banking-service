@@ -35,7 +35,7 @@ public class OperationsRepository
         command.CommandText = sql;
         command.Parameters.AddWithValue("id", id);
         await using NpgsqlDataReader reader = await command.ExecuteReaderAsync(cancellationToken);
-        await reader.ReadAsync(cancellationToken);
+        await ReadOrThrow(reader, cancellationToken);
 
         var entity = OperationEntity.FromReader(reader);
         StoreEntity(entity);
@@ -58,7 +58,7 @@ public class OperationsRepository
         command.CommandText = sql;
         command.Parameters.AddWithValue("idempotency_key", idempotencyKey);
         await using NpgsqlDataReader reader = await command.ExecuteReaderAsync(cancellationToken);
-        await reader.ReadAsync(cancellationToken);
+        await ReadOrThrow(reader, cancellationToken);
 
         var entity = OperationEntity.FromReader(reader);
         StoreEntity(entity);
@@ -101,7 +101,7 @@ public class OperationsRepository
         try
         {
             await using NpgsqlDataReader reader = await command.ExecuteReaderAsync(cancellationToken);
-            await reader.ReadAsync(cancellationToken);
+            await ReadOrThrow(reader, cancellationToken);
             var entity = OperationEntity.FromReader(reader);
             StoreEntity(entity);
             return entity;
@@ -139,7 +139,7 @@ public class OperationsRepository
         command.Parameters.AddWithValue("status", status.ToDbValue());
 
         await using NpgsqlDataReader reader = await command.ExecuteReaderAsync(cancellationToken);
-        await reader.ReadAsync(cancellationToken);
+        await ReadOrThrow(reader, cancellationToken);
         var entity = OperationEntity.FromReader(reader);
         StoreEntity(entity);
         return entity;
@@ -149,5 +149,15 @@ public class OperationsRepository
     {
         _cacheStorage.Set("id", entity.Id, entity);
         _cacheStorage.Set("idempotency_key", entity.IdempotencyKey, entity);
+    }
+
+    private async Task ReadOrThrow(
+        NpgsqlDataReader reader,
+        CancellationToken cancellationToken = default)
+    {
+        if (!await reader.ReadAsync(cancellationToken))
+        {
+            throw new EmptyReaderException();
+        }
     }
 }

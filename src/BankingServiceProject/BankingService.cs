@@ -1,4 +1,5 @@
 using BankingServiceProject.Domain;
+using BankingServiceProject.Exceptions;
 using BankingServiceProject.ProviderStrategies;
 using BankingServiceProject.RepositoryProject.Domain;
 using BankingServiceProject.RepositoryProject.Exceptions;
@@ -31,11 +32,18 @@ public class BankingService
         _options = options.CurrentValue;
     }
 
-    public Task<OperationEntity> GetPaymentAsync(
+    public async Task<OperationEntity> GetPaymentAsync(
         string paymentId,
         CancellationToken cancellationToken = default)
     {
-        return _operationsRepository.GetOperationAsync(paymentId, cancellationToken);
+        try
+        {
+            return await _operationsRepository.GetOperationAsync(paymentId, cancellationToken);
+        }
+        catch (EmptyReaderException)
+        {
+            throw new EntityNotFoundException();
+        }
     }
 
     public async Task<OperationEntity> CreatePaymentAsync(
@@ -47,27 +55,34 @@ public class BankingService
         string id = Guid.NewGuid().ToString();
         try
         {
-            IBankingProviderStrategy strategy = _selector.GetStrategy(bankingProviderType);
-            PaymentCreationResponse creationResponse = await strategy
-                .StartPaymentAsync(id, amount, _options.WebhookBaseUrl, cancellationToken);
+            try
+            {
+                IBankingProviderStrategy strategy = _selector.GetStrategy(bankingProviderType);
+                PaymentCreationResponse creationResponse = await strategy
+                    .StartPaymentAsync(id, amount, _options.WebhookBaseUrl, cancellationToken);
 
-            OperationEntity operation = await _operationsRepository.CreateOperationAsync(
-                id,
-                idempotencyKey,
-                creationResponse.Metainfo.Serialize(_jsonOptions),
-                new Uri(creationResponse.ConfirmationUrl),
-                amount,
-                BankingProviderType.Mock,
-                cancellationToken);
-
-            return operation;
-        }
-        catch (IdempotencyKeyConflictException)
-        {
-            return await _operationsRepository
-                .GetOperationByIdempotencyKeyAsync(
+                OperationEntity operation = await _operationsRepository.CreateOperationAsync(
+                    id,
                     idempotencyKey,
+                    creationResponse.Metainfo.Serialize(_jsonOptions),
+                    new Uri(creationResponse.ConfirmationUrl),
+                    amount,
+                    BankingProviderType.Mock,
                     cancellationToken);
+
+                return operation;
+            }
+            catch (IdempotencyKeyConflictException)
+            {
+                return await _operationsRepository
+                    .GetOperationByIdempotencyKeyAsync(
+                        idempotencyKey,
+                        cancellationToken);
+            }
+        }
+        catch (EmptyReaderException)
+        {
+            throw new EntityNotFoundException();
         }
     }
 
@@ -86,16 +101,38 @@ public class BankingService
                 .CreateAsyncEnumerable();
 
         await _producer.ProduceAsync(flow, cancellationToken);
-        await _operationsRepository.UpdateStatusAsync(paymentId, message.Status, cancellationToken);
+        try
+        {
+            await _operationsRepository.UpdateStatusAsync(paymentId, message.Status, cancellationToken);
+        }
+        catch (EmptyReaderException)
+        {
+            throw new EntityNotFoundException();
+        }
     }
 
     public async Task MarkCompensatedAsync(
         string paymentId,
         CancellationToken cancellationToken = default)
     {
-        await _operationsRepository.UpdateStatusAsync(
-            paymentId,
-            OperationStatus.Compensated,
-            cancellationToken);
+        try
+        {
+            OperationEntity operation = await _operationsRepository.GetOperationAsync(paymentId, cancellationToken);
+            if (operation.Status != OperationStatus.Completed)
+            {
+                throw new InvalidStateException(
+                    nameof(OperationStatus.Cancelled),
+                    nameof(operation.Status));
+            }
+
+            await _operationsRepository.UpdateStatusAsync(
+                paymentId,
+                OperationStatus.Compensated,
+                cancellationToken);
+        }
+        catch (EmptyReaderException)
+        {
+            throw new EntityNotFoundException();
+        }
     }
 }

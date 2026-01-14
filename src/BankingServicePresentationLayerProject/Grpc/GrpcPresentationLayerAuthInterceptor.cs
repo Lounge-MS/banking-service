@@ -22,7 +22,11 @@ public class GrpcPresentationLayerAuthInterceptor : Interceptor
             .FirstOrDefault(h => h.Key == "authorization")
             ?.Value;
 
-        _tokenValidator.ValidateToken(token);
+        if (!_tokenValidator.ValidateToken(token))
+        {
+            throw new RpcException(new Status(StatusCode.Unauthenticated, "Invalid token"));
+        }
+
         return await continuation(request, context);
     }
 }

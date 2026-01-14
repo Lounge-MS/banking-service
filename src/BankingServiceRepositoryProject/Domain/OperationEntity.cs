@@ -18,7 +18,6 @@ public record OperationEntity(
     {
         string metaStr = reader.GetString(reader.GetOrdinal("metainfo"));
         var metainfo = JsonDocument.Parse(metaStr);
-
         return new OperationEntity(
             Id: reader.GetString(reader.GetOrdinal("id")),
             IdempotencyKey: reader.GetString(reader.GetOrdinal("idempotency_key")),

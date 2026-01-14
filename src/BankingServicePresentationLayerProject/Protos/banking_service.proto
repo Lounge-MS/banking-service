@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-package lms.blms.grpc.banking_service.v1;
+package banking_service;
 
 service BankingService {
   rpc GetPayment(GetPaymentRequest) returns (GetPaymentResponse);

@@ -1,5 +1,4 @@
 using BankingServiceProject.CommonProject.Security.Secrets;
-using BankingServiceProject.PresentationLayerProject.Grpc.Exceptions;
 using Microsoft.Extensions.Options;
 
 namespace BankingServiceProject.PresentationLayerProject.Grpc;
@@ -17,12 +16,9 @@ public class TokenValidator
         _secretsProvider = secretsProvider;
     }
 
-    public void ValidateToken(string? token)
+    public bool ValidateToken(string? token)
     {
-        if (string.IsNullOrWhiteSpace(token)
-            || token != _secretsProvider.GetSecretString(_options.OrderServiceIdentityTokenName))
-        {
-            throw new InvalidTokenException();
-        }
+        return !string.IsNullOrWhiteSpace(token)
+               && token == _secretsProvider.GetSecretString(_options.OrderServiceIdentityTokenName);
     }
 }

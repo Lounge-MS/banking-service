@@ -1,6 +1,6 @@
 using Grpc.Core;
 using BankingServiceRepositoryProject = BankingServiceProject.RepositoryProject.Domain;
-using GrpcBankingServiceProject = Lms.Blms.Grpc.BankingService.V1;
+using GrpcBankingServiceProject = BankingService;
 
 namespace BankingServiceProject.PresentationLayerProject.Grpc;
 

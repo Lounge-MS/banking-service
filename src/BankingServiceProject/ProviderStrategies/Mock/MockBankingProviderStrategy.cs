@@ -79,8 +79,15 @@ public class MockBankingProviderStrategy : IBankingProviderStrategy
             _secretsProvider
                 .GetSecretString(_options.IdentityTokenName));
 
-        MockBankingProviderStartPaymentResponse response =
-            await _client.StartPaymentAsync(request, cancellationToken);
+        MockBankingProviderStartPaymentResponse response;
+        try
+        {
+            response = await _client.StartPaymentAsync(request, cancellationToken);
+        }
+        catch (Exception)
+        {
+            throw new ProviderUnavailableException("Mock");
+        }
 
         AesEncryptedData encryptedData = _encryptor
             .Encrypt(

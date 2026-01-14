@@ -1,6 +1,6 @@
 using BankingServiceProject.PresentationLayerProject.Grpc.Exceptions;
 using BankingServiceRepositoryProject = BankingServiceProject.RepositoryProject;
-using GrpcBankingServiceProject = Lms.Blms.Grpc.BankingService.V1;
+using GrpcBankingServiceProject = BankingService;
 
 namespace BankingServiceProject.PresentationLayerProject.Grpc;
 
@@ -29,6 +29,23 @@ public static class GrpcPresentationLayerDomainExtensions
         };
     }
 
+    public static GrpcBankingServiceProject.PaymentStatus ToGrpc(
+        this BankingServiceRepositoryProject.Domain.OperationStatus status)
+    {
+        return status switch
+        {
+            BankingServiceRepositoryProject.Domain.OperationStatus.Created =>
+                GrpcBankingServiceProject.PaymentStatus.Created,
+            BankingServiceRepositoryProject.Domain.OperationStatus.Completed =>
+                GrpcBankingServiceProject.PaymentStatus.Completed,
+            BankingServiceRepositoryProject.Domain.OperationStatus.Cancelled =>
+                GrpcBankingServiceProject.PaymentStatus.Cancelled,
+            BankingServiceRepositoryProject.Domain.OperationStatus.Compensated =>
+                GrpcBankingServiceProject.PaymentStatus.Compensated,
+            _ => GrpcBankingServiceProject.PaymentStatus.Unspecified,
+        };
+    }
+
     public static GrpcBankingServiceProject.Payment ToGrpcEntity(
         this BankingServiceRepositoryProject.Domain.OperationEntity entity)
     {
@@ -36,7 +53,8 @@ public static class GrpcPresentationLayerDomainExtensions
         {
             Id = entity.Id,
             AmountInKopecks = (int)(entity.Amount * 100m),
-            PaymentUrl = entity.PaymentUrl.AbsolutePath,
+            PaymentUrl = entity.PaymentUrl.AbsoluteUri,
+            Status = entity.Status.ToGrpc(),
             Provider = entity.BankingProviderType.ToGrpcEntity(),
         };
     }

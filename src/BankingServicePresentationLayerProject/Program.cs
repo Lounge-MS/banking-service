@@ -7,7 +7,7 @@ using DotNetEnv;
 
 WebApplicationBuilder builder = WebApplication.CreateBuilder();
 
-Env.Load("dev.env");
+Env.Load(".env");
 builder.Configuration
     .AddJsonFile("appsettings.json")
     .AddEnvironmentVariables();

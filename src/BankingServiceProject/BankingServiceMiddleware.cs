@@ -29,18 +29,18 @@ public class BankingServiceMiddleware
 
     private static async Task HandleExceptionAsync(HttpContext context, Exception ex)
     {
-        (HttpStatusCode code, string message) = ex switch
+        HttpStatusCode code = ex switch
         {
-            WebhookInvalidTokenException => (HttpStatusCode.Forbidden, ex.Message),
-            ChannelFullException => (HttpStatusCode.ServiceUnavailable, ex.Message),
-            NoProviderTypeException or NoStrategyException => (HttpStatusCode.BadRequest, ex.Message),
-            ApiException => (HttpStatusCode.BadGateway, ex.Message),
-            _ => (HttpStatusCode.InternalServerError, "Internal server error"),
+            WebhookInvalidTokenException => HttpStatusCode.Forbidden,
+            ChannelFullException => HttpStatusCode.ServiceUnavailable,
+            NoProviderTypeException or NoStrategyException => HttpStatusCode.BadRequest,
+            ApiException => HttpStatusCode.BadGateway,
+            _ => HttpStatusCode.InternalServerError,
         };
 
         var error = new
         {
-            error = message,
+            error = ex.Message,
         };
 
         context.Response.ContentType = "application/json";

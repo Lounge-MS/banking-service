@@ -24,9 +24,9 @@ public class GrpcErrorHandlingInterceptor : Interceptor
         {
             return await continuation(request, context);
         }
-        catch (InvalidTokenException ex)
+        catch (RpcException)
         {
-            throw new RpcException(new Status(StatusCode.Unauthenticated, ex.Message));
+            throw;
         }
         catch (UnknownProviderException ex)
         {
@@ -40,10 +40,18 @@ public class GrpcErrorHandlingInterceptor : Interceptor
         {
             throw new RpcException(new Status(StatusCode.InvalidArgument, ex.Message));
         }
+        catch (InvalidStateException ex)
+        {
+            throw new RpcException(new Status(StatusCode.FailedPrecondition, ex.Message));
+        }
+        catch (EntityNotFoundException ex)
+        {
+            throw new RpcException(new Status(StatusCode.NotFound, ex.Message));
+        }
         catch (Exception ex)
         {
             _logger.LogError($"Unhandled exception: {ex}");
-            throw new RpcException(new Status(StatusCode.Internal, "Internal server error"));
+            throw new RpcException(new Status(StatusCode.Internal, ex.Message));
         }
     }
 }
