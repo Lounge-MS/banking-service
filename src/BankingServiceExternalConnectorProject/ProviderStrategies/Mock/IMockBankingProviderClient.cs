@@ -1,7 +1,7 @@
-using BankingServiceProject.Clients.Dto;
+using BankingServiceProject.ExternalConnectorProject.ProviderStrategies.Mock.Dto;
 using Refit;
 
-namespace BankingServiceProject.Clients;
+namespace BankingServiceProject.ExternalConnectorProject.ProviderStrategies.Mock;
 
 public interface IMockBankingProviderClient
 {

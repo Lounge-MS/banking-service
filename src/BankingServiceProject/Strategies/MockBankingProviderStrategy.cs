@@ -30,42 +30,5 @@ public class MockBankingProviderStrategy : IBankingProviderStrategy
         _jsonOptions = jsonOptions;
     }
 
-    public async Task<OperationEntity> StartPaymentAsync(
-        string id,
-        string idempotencyKey,
-        decimal amount,
-        OperationsRepository repository,
-        CancellationToken cancellationToken = default)
-    {
-        // Мне самому эта строка не нравится, но я не знаю как сделать это красиво.
-        // Это проблема C# с кривой реализацией дефолтных методов интерфейса.
-        Uri url = ((IBankingProviderStrategy)this)
-            .GenerateWebhookUrl(new Uri(_options.WebhookBaseUrl), id);
-        var request = new MockBankingProviderStartPaymentRequest(
-            amount,
-            url,
-            _secretsProvider
-                .GetSecretString(_options.IdentityTokenName));
-
-        MockBankingProviderStartPaymentResponse result =
-            await _client.StartPaymentAsync(request, cancellationToken);
-        AesEncryptedData encryptedData = _encryptor
-            .Encrypt(
-                result.IdentityToken,
-                _secretsProvider.GetSecretByteArray(
-                    _options.EncryptionSecretKeyName));
-
-        var metainfo = new MockBankingProviderMetainfo(
-            encryptedData.EncryptedData,
-            encryptedData.Iv);
-
-        return await repository.CreateOperationAsync(
-            idempotencyKey,
-            result.Id,
-            JsonSerializer.SerializeToDocument(metainfo, _jsonOptions),
-            new Uri($"{_options.BaseUrl}/confirm/{result.Id}"),
-            amount,
-            BankingProvider.Mock,
-            cancellationToken);
-    }
+    
 }

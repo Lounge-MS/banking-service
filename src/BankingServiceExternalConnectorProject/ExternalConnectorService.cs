@@ -1,32 +1,23 @@
 using BankingServiceProject.ExternalConnectorProject.Domain;
-using BankingServiceProject.ExternalConnectorProject.Exceptions;
 using BankingServiceProject.ExternalConnectorProject.ProviderStrategies;
 using Itmo.Dev.Platform.Kafka.Producer;
-using Microsoft.Extensions.Options;
-using System.Threading.Channels;
 
 namespace BankingServiceProject.ExternalConnectorProject;
 
-public class ExternalConnectorService : BackgroundService
+public class ExternalConnectorService
 {
     private readonly IKafkaMessageProducer<string, string> _producer;
-    private readonly Channel<KafkaProducerMessage<string, string>> _channel;
-    private readonly ExternalConnectorOptions _options;
     private readonly BankingProviderStrategySelector _selector;
 
     public ExternalConnectorService(
         IKafkaMessageProducer<string, string> producer,
-        BankingProviderStrategySelector selector,
-        IOptionsMonitor<ExternalConnectorOptions> options)
+        BankingProviderStrategySelector selector)
     {
         _producer = producer;
-        _options = options.CurrentValue;
-        _channel = Channel.CreateBounded<KafkaProducerMessage<string, string>>(
-            _options.ChannelSize);
         _selector = selector;
     }
 
-    public async Task GetMessageAsync(
+    public async Task ReceivePaymentAsync(
         string paymentId,
         HttpRequest request,
         string providerTypeName,
@@ -37,14 +28,12 @@ public class ExternalConnectorService : BackgroundService
         IBankingProviderStrategy strategy = _selector.GetStrategy(providerTypeName);
         await strategy.ValidateRequestAsync(parsedRequest, cancellationToken);
 
-        if (!_channel.Writer.TryWrite(new KafkaProducerMessage<string, string>(paymentId, parsedRequest.Body)))
-        {
-            throw new ChannelFullException(_channel.Reader.Count);
-        }
-    }
+        // Раньше в коде была красивая реализация на канале с асинхронной публикацией
+        // Потом я понял, что мне нужен ответ от кафки СРАЗУ ЖЕ, чтобы
+        IAsyncEnumerable<KafkaProducerMessage<string, string>> flow =
+            new[] { new KafkaProducerMessage<string, string>(paymentId, parsedRequest.Body) }
+                .ToAsyncEnumerable();
 
-    protected override async Task ExecuteAsync(CancellationToken stoppingToken)
-    {
-        await _producer.ProduceAsync(_channel.Reader.ReadAllAsync(stoppingToken), stoppingToken);
+        await _producer.ProduceAsync(flow, cancellationToken);
     }
 }

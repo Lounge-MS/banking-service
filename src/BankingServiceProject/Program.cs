@@ -3,7 +3,8 @@ using BankingServiceProject;
 using BankingServiceProject.RepositoryProject.Domain;
 using BankingServiceProject.RepositoryProject.Migrations;
 using BankingServiceProject.RepositoryProject.Repositories;
-using BankingServiceProject.SharedProject.Cryptography;
+using BankingServiceProject.SharedProject.Security.Cryptography;
+using BankingServiceProject.SharedProject.Security.Secrets;
 using BankingServiceProject.Strategies;
 using DotNetEnv;
 using FluentMigrator.Runner;
@@ -43,8 +44,8 @@ serviceCollection
     .AddSingleton<BankingProviderStrategySelector>();
 
 serviceCollection
-    .AddSingleton<ISecretsProvider>(secretsProvider)
-    .AddSingleton<AesEncryptor>();
+    .AddSecretsProvider(secretsProvider)
+    .AddAesEncryptor();
 
 serviceCollection
     .AddSingleton<IMemoryCache, MemoryCache>()

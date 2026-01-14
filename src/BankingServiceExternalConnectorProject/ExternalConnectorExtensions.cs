@@ -1,12 +1,22 @@
 using BankingServiceProject.ExternalConnectorProject.ProviderStrategies;
-using BankingServiceProject.SharedProject.Cryptography;
+using BankingServiceProject.ExternalConnectorProject.ProviderStrategies.Mock;
 using Itmo.Dev.Platform.Kafka.Extensions;
 
 namespace BankingServiceProject.ExternalConnectorProject;
 
 public static class ExternalConnectorExtensions
 {
-    public static IServiceCollection AddCallbackHandlerKafkaProducer(
+    public static IServiceCollection AddMockStrategy(
+        this IServiceCollection serviceCollection,
+        IConfigurationSection optionSection)
+    {
+        serviceCollection.AddHttpClient<IMockBankingProviderClient>();
+        serviceCollection.AddSingleton<MockBankingProviderStrategy>();
+        serviceCollection.Configure<MockBankingProviderStrategyOptions>(optionSection);
+        return serviceCollection;
+    }
+
+    public static IServiceCollection AddExternalConnectorKafkaProducer(
         this IServiceCollection serviceCollection,
         IConfigurationSection kafkaSection,
         IConfigurationSection kafkaMessageSection)
@@ -22,25 +32,15 @@ public static class ExternalConnectorExtensions
                     .SerializeValueWithNewtonsoft()));
     }
 
-    public static IServiceCollection AddCallbackHandlerRequiredServices(
+    public static IServiceCollection AddExternalConnectorServices(
         this IServiceCollection serviceCollection)
     {
         return serviceCollection
-            .AddSingleton<ISecretsProvider, EnvironmentSecretsProvider>()
             .AddSingleton<ExternalConnectorService>()
-            .AddHostedService(provider => provider.GetRequiredService<ExternalConnectorService>())
-            .AddSingleton<BankingProviderStrategySelector>()
-            .AddStrategies();
+            .AddSingleton<BankingProviderStrategySelector>();
     }
 
-    public static IServiceCollection AddStrategies(
-        this IServiceCollection serviceCollection)
-    {
-        return serviceCollection
-            .AddSingleton<MockBankingProviderStrategy>();
-    }
-
-    public static void UseCallbackHandlerMiddleware(
+    public static void UseExternalConnectorMiddleware(
         this IApplicationBuilder app)
     {
         app.UseMiddleware<ExternalConnectorMiddleware>();

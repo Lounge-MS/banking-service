@@ -1,4 +1,5 @@
 using BankingServiceProject.ExternalConnectorProject.Exceptions;
+using BankingServiceProject.ExternalConnectorProject.ProviderStrategies.Mock;
 using System.Collections.Concurrent;
 
 namespace BankingServiceProject.ExternalConnectorProject.ProviderStrategies;
@@ -10,11 +11,12 @@ public class BankingProviderStrategySelector
         IBankingProviderStrategy> _strategies;
 
     public BankingProviderStrategySelector(
-        MockBankingProviderStrategy mockStrategy)
+        IServiceProvider serviceProvider)
     {
         _strategies = new ConcurrentDictionary<BankingProviderType, IBankingProviderStrategy>
         {
-            [BankingProviderType.Mock] = mockStrategy,
+            [BankingProviderType.Mock] =
+                serviceProvider.GetRequiredService<MockBankingProviderStrategy>(),
         };
     }
 

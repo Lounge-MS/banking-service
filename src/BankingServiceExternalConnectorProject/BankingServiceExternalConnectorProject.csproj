@@ -10,12 +10,14 @@
       <PackageReference Include="DotNetEnv" />
       <PackageReference Include="Itmo.Dev.Platform.Common" />
       <PackageReference Include="Itmo.Dev.Platform.Kafka" />
+      <PackageReference Include="Refit" />
       <PackageReference Include="System.Linq.Async" />
     </ItemGroup>
     <ItemGroup>
         <None Include="appsettings.json" CopyToOutputDirectory="PreserveNewest" />
     </ItemGroup>
     <ItemGroup>
+      <ProjectReference Include="..\BankingServiceRepositoryProject\BankingServiceRepositoryProject.csproj" />
       <ProjectReference Include="..\BankingServiceShared\BankingServiceShared.csproj" />
     </ItemGroup>
     <ItemGroup>

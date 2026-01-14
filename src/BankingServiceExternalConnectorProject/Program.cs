@@ -1,5 +1,5 @@
 using BankingServiceProject.ExternalConnectorProject;
-using BankingServiceProject.ExternalConnectorProject.ProviderStrategies;
+using BankingServiceProject.SharedProject.Security.Secrets;
 using DotNetEnv;
 
 WebApplicationBuilder builder = WebApplication.CreateBuilder();
@@ -7,22 +7,18 @@ Env.Load("dev.env");
 builder.Configuration.AddJsonFile("appsettings.json");
 
 builder.Services
-    .Configure<MockBankingProviderStrategyOptions>(
-        builder.Configuration.GetSection("BankingProviderStrategies:Mock"))
-    .Configure<ExternalConnectorOptions>(
-        builder.Configuration.GetSection("CallbackHandler"));
-
-builder.Services
-    .AddCallbackHandlerRequiredServices()
+    .AddEnvironmentSecretsProvider()
+    .AddMockStrategy(builder.Configuration.GetSection("BankingProviderStrategies:Mock"))
+    .AddExternalConnectorServices(builder.Configuration.GetSection("ExternalConnector"))
     .AddControllers();
 
 builder.Services
-    .AddCallbackHandlerKafkaProducer(
+    .AddExternalConnectorKafkaProducer(
         builder.Configuration.GetSection("Kafka"),
         builder.Configuration.GetSection("Kafka:Producer:Message"));
 
 WebApplication app = builder.Build();
-app.UseCallbackHandlerMiddleware();
+app.UseExternalConnectorMiddleware();
 app.MapControllers();
 
 app.Run();
