@@ -6,7 +6,4 @@
     <Project Path="src\BankingServiceRepositoryProject\BankingServiceRepositoryProject.csproj" Type="Classic C#" />
     <Project Path="src\MockBankingProviderProject\MockBankingProviderProject.csproj" Type="Classic C#" />
   </Folder>
-  <Folder Name="/tests/">
-    <Project Path="tests\BankingService.Tests.csproj" Type="Classic C#" />
-  </Folder>
 </Solution>
