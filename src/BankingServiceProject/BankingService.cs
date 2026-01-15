@@ -4,9 +4,11 @@ using BankingServiceProject.ProviderStrategies;
 using BankingServiceProject.RepositoryProject.Domain;
 using BankingServiceProject.RepositoryProject.Exceptions;
 using BankingServiceProject.RepositoryProject.Repositories;
+using GrpcBankingService.Kafka;
 using Itmo.Dev.Platform.Kafka.Producer;
 using Microsoft.Extensions.Options;
 using System.Text.Json;
+using System.Transactions;
 
 namespace BankingServiceProject;
 
@@ -14,14 +16,14 @@ public class BankingService
 {
     private readonly OperationsRepository _operationsRepository;
     private readonly BankingProviderStrategySelector _selector;
-    private readonly IKafkaMessageProducer<string, PaymentCompletionMessage> _producer;
+    private readonly IKafkaMessageProducer<ClosedCheckKey, ClosedCheckValue> _producer;
     private readonly JsonSerializerOptions _jsonOptions;
     private readonly BankingServiceOptions _options;
 
     public BankingService(
         OperationsRepository operationsRepository,
         BankingProviderStrategySelector selector,
-        IKafkaMessageProducer<string, PaymentCompletionMessage> producer,
+        IKafkaMessageProducer<ClosedCheckKey, ClosedCheckValue> producer,
         JsonSerializerOptions jsonOptions,
         IOptionsMonitor<BankingServiceOptions> options)
     {
@@ -92,23 +94,36 @@ public class BankingService
         string providerTypeName,
         CancellationToken cancellationToken = default)
     {
+        using var transactionScope = new TransactionScope(TransactionScopeAsyncFlowOption.Enabled);
+
         IBankingProviderStrategy strategy = _selector.GetStrategy(providerTypeName);
         PaymentCompletionMessage message =
             await strategy.ValidateAndParseRequestAsync(paymentId, request, cancellationToken);
 
-        IAsyncEnumerable<KafkaProducerMessage<string, PaymentCompletionMessage>> flow =
-            new KafkaProducerMessage<string, PaymentCompletionMessage>(paymentId, message)
-                .CreateAsyncEnumerable();
-
-        await _producer.ProduceAsync(flow, cancellationToken);
+        OperationEntity msg;
         try
         {
-            await _operationsRepository.UpdateStatusAsync(paymentId, message.Status, cancellationToken);
+            msg = await _operationsRepository.UpdateStatusAsync(paymentId, message.Status, cancellationToken);
         }
         catch (EmptyReaderException)
         {
             throw new EntityNotFoundException();
         }
+
+        IAsyncEnumerable<KafkaProducerMessage<ClosedCheckKey, ClosedCheckValue>> flow =
+            new KafkaProducerMessage<ClosedCheckKey, ClosedCheckValue>(
+                    new ClosedCheckKey
+                    {
+                        PaymentId = paymentId,
+                    },
+                    new ClosedCheckValue
+                    {
+                        PaymentId = paymentId,
+                        Status = ToGrpcStatus(msg.Status),
+                    })
+                .CreateAsyncEnumerable();
+
+        await _producer.ProduceAsync(flow, cancellationToken);
     }
 
     public async Task MarkCompensatedAsync(
@@ -134,5 +149,18 @@ public class BankingService
         {
             throw new EntityNotFoundException();
         }
+    }
+
+    private static PaymentStatus ToGrpcStatus(OperationStatus status)
+    {
+        return status switch
+        {
+            OperationStatus.Completed => PaymentStatus.Completed,
+            OperationStatus.Cancelled => PaymentStatus.Cancelled,
+            OperationStatus.Created or OperationStatus.Compensated or _ =>
+                throw new ArgumentOutOfRangeException(
+                    nameof(status),
+                    "Impossible state in current context"),
+        };
     }
 }

@@ -1,0 +1,18 @@
+syntax = "proto3";
+
+package grpc_banking_service.kafka;
+
+message ClosedCheckKey {
+  string payment_id = 1;
+}
+
+enum PaymentStatus {
+  PAYMENT_STATUS_UNSPECIFIED = 0;
+  PAYMENT_STATUS_COMPLETED = 1;
+  PAYMENT_STATUS_CANCELLED = 2;
+}
+
+message ClosedCheckValue {
+  string payment_id = 1;
+  PaymentStatus status = 2;
+}

@@ -1,7 +1,7 @@
-using BankingServiceProject.Domain;
 using BankingServiceProject.ProviderStrategies;
 using BankingServiceProject.ProviderStrategies.Mock;
 using BankingServiceProject.RepositoryProject;
+using GrpcBankingService.Kafka;
 using Itmo.Dev.Platform.Kafka.Extensions;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.Configuration;
@@ -42,8 +42,8 @@ public static class BankingServiceExtensions
             selector => selector
                 .ConfigureOptions(kafkaSection)
                 .AddProducer(b => b
-                    .WithKey<string>()
-                    .WithValue<PaymentCompletionMessage>()
+                    .WithKey<ClosedCheckKey>()
+                    .WithValue<ClosedCheckValue>()
                     .WithConfiguration(kafkaMessageSection)
                     .SerializeKeyWithNewtonsoft()
                     .SerializeValueWithNewtonsoft()));

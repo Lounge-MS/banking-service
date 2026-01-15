@@ -1,55 +1,55 @@
 using BankingServiceProject.PresentationLayerProject.Grpc.Exceptions;
+using GrpcBankingService;
 using BankingServiceRepositoryProject = BankingServiceProject.RepositoryProject;
-using GrpcBankingServiceProject = BankingService;
 
 namespace BankingServiceProject.PresentationLayerProject.Grpc;
 
 public static class GrpcPresentationLayerDomainExtensions
 {
     public static BankingServiceRepositoryProject.Domain.BankingProviderType ToDomainEntity(
-        this GrpcBankingServiceProject.BankingProviderType providerType)
+        this BankingProviderType providerType)
     {
         return providerType switch
         {
-            GrpcBankingServiceProject.BankingProviderType.BankingProviderMock =>
+            BankingProviderType.BankingProviderMock =>
                 BankingServiceRepositoryProject.Domain.BankingProviderType.Mock,
-            GrpcBankingServiceProject.BankingProviderType.BankingProviderUnspecified or _ =>
+            BankingProviderType.BankingProviderUnspecified or _ =>
                 throw new UnknownProviderException(providerType.ToString()),
         };
     }
 
-    public static GrpcBankingServiceProject.BankingProviderType ToGrpcEntity(
+    public static BankingProviderType ToGrpcEntity(
         this BankingServiceRepositoryProject.Domain.BankingProviderType providerType)
     {
         return providerType switch
         {
             BankingServiceRepositoryProject.Domain.BankingProviderType.Mock =>
-                GrpcBankingServiceProject.BankingProviderType.BankingProviderMock,
+                BankingProviderType.BankingProviderMock,
             _ => throw new UnknownProviderException(providerType.ToString()),
         };
     }
 
-    public static GrpcBankingServiceProject.PaymentStatus ToGrpc(
+    public static GrpcBankingService.PaymentStatus ToGrpc(
         this BankingServiceRepositoryProject.Domain.OperationStatus status)
     {
         return status switch
         {
             BankingServiceRepositoryProject.Domain.OperationStatus.Created =>
-                GrpcBankingServiceProject.PaymentStatus.Created,
+                PaymentStatus.Created,
             BankingServiceRepositoryProject.Domain.OperationStatus.Completed =>
-                GrpcBankingServiceProject.PaymentStatus.Completed,
+                PaymentStatus.Completed,
             BankingServiceRepositoryProject.Domain.OperationStatus.Cancelled =>
-                GrpcBankingServiceProject.PaymentStatus.Cancelled,
+                PaymentStatus.Cancelled,
             BankingServiceRepositoryProject.Domain.OperationStatus.Compensated =>
-                GrpcBankingServiceProject.PaymentStatus.Compensated,
-            _ => GrpcBankingServiceProject.PaymentStatus.Unspecified,
+                PaymentStatus.Compensated,
+            _ => PaymentStatus.Unspecified,
         };
     }
 
-    public static GrpcBankingServiceProject.Payment ToGrpcEntity(
+    public static Payment ToGrpcEntity(
         this BankingServiceRepositoryProject.Domain.OperationEntity entity)
     {
-        return new GrpcBankingServiceProject.Payment
+        return new Payment
         {
             Id = entity.Id,
             AmountInKopecks = (int)(entity.Amount * 100m),

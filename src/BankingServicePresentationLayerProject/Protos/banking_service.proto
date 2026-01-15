@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-package banking_service;
+package grpc_banking_service;
 
 service BankingService {
   rpc GetPayment(GetPaymentRequest) returns (GetPaymentResponse);
@@ -48,7 +48,7 @@ message CreatePaymentResponse {
 }
 
 message MarkCompensatedRequest {
-  string paymentId = 1;
+  string id = 1;
 }
 
 message MarkCompensatedResponse {}

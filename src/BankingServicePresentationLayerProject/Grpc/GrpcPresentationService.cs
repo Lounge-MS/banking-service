@@ -1,6 +1,6 @@
 using Grpc.Core;
 using BankingServiceRepositoryProject = BankingServiceProject.RepositoryProject.Domain;
-using GrpcBankingServiceProject = BankingService;
+using GrpcBankingServiceProject = GrpcBankingService;
 
 namespace BankingServiceProject.PresentationLayerProject.Grpc;
 
@@ -47,7 +47,7 @@ public class GrpcPresentationService : GrpcBankingServiceProject.BankingService.
         GrpcBankingServiceProject.MarkCompensatedRequest request,
         ServerCallContext context)
     {
-        await _service.MarkCompensatedAsync(request.PaymentId, context.CancellationToken);
+        await _service.MarkCompensatedAsync(request.Id, context.CancellationToken);
 
         return new GrpcBankingServiceProject.MarkCompensatedResponse();
     }
