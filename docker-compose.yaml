@@ -1,7 +1,7 @@
 services:
-  postgres:
-    image: postgres:latest
+  bank-postgres:
     container_name: bank-postgres
+    image: postgres:latest
     networks:
       - bank-network
     ports:
@@ -12,10 +12,15 @@ services:
       POSTGRES_PASSWORD: "postgres"
     volumes:
       - bank-data:/data/postgres
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U postgres" ]
+      interval: 5s
+      timeout: 3s
+      retries: 5
 
-  kafka:
-    image: apache/kafka:latest
+  bank-kafka:
     container_name: bank-kafka
+    image: apache/kafka:latest
     networks:
       - bank-network
     ports:
@@ -39,16 +44,16 @@ services:
     volumes:
       - bank-checks-kafka-data:/kafka-data
 
-  kafka-ui:
-    image: provectuslabs/kafka-ui:latest
+  bank-kafka-ui:
     container_name: bank-kafka-ui
+    image: provectuslabs/kafka-ui:latest
     networks:
       - bank-network
     build:
       context: .
     restart: unless-stopped
     depends_on:
-      - kafka
+      - bank-kafka
     ports:
       - "8082:8080"
     volumes:
@@ -58,12 +63,45 @@ services:
       kafka.clusters.0.bootstrapServers: bank-kafka:9092
       kafka.clusters.0.defaultKeySerde: ProtobufFile
       kafka.clusters.0.defaultValueSerde: ProtobufFile
-      
+
       kafka.clusters.0.serde.0.name: ProtobufFile
       kafka.clusters.0.serde.0.properties.protobufFilesDir: /schemas/
-      
+
       kafka.clusters.0.serde.0.properties.protobufMessageNameForKeyByTopic.CheckClosedEvent: grpc_banking_service.kafka.ClosedCheckKey
       kafka.clusters.0.serde.0.properties.protobufMessageNameForValueByTopic.CheckClosedEvent: grpc_banking_service.kafka.ClosedCheckValue
+
+  mock-banking-provider:
+    container_name: mock-banking-provider
+    networks:
+      - bank-network
+    build:
+      context: .
+      dockerfile: Dockerfile.mockprovider
+    ports:
+      - "8001:8081"
+
+  banking-service:
+    container_name: banking-service
+    networks:
+      - bank-network
+    build:
+      context: .
+      dockerfile: Dockerfile.service
+    ports:
+      - "8000:8080"
+    environment:
+      BankingProviders__Mock__BaseUrl: "http://mock-banking-provider:8081"
+      BankingService__WebhookBaseUrl: "http://banking-service:8079/reply"
+      Kafka__Host: "bank-kafka:9092"
+      MOCK_IDENTITY_TOKEN: "identity-token"
+      MOCK_ENCRYPTION: "50dgbqH4InrjIyLeJDEAsOHkOy28K5cNfERguI63tXc="
+      POSTGRES_CONNECTION_STRING: "Host=bank-postgres;Port=5432;Database=postgres;Username=postgres;Password=postgres"
+      ORDER_SERVICE_IDENTITY_TOKEN: "order-service-identity-token"
+    depends_on:
+        bank-postgres:
+          condition: service_healthy
+        bank-kafka:
+          condition: service_started
 
 networks:
   bank-network:
