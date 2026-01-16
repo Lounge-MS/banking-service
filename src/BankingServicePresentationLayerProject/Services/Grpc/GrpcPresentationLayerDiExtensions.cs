@@ -1,5 +1,3 @@
-using BankingServiceProject.PresentationLayerProject.Grpc;
-
 namespace BankingServiceProject.PresentationLayerProject.Services.Grpc;
 
 public static class GrpcPresentationLayerDiExtensions

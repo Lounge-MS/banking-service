@@ -1,5 +1,5 @@
 using BankingServiceProject.Entities;
-using BankingServiceProject.PresentationLayerProject.Grpc.Exceptions;
+using BankingServiceProject.PresentationLayerProject.Services.Grpc.Exceptions;
 using GrpcBankingService;
 using BankingProviderType = GrpcBankingService.BankingProviderType;
 

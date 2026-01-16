@@ -1,7 +1,7 @@
 using Grpc.Core;
 using Grpc.Core.Interceptors;
 
-namespace BankingServiceProject.PresentationLayerProject.Grpc;
+namespace BankingServiceProject.PresentationLayerProject.Services.Grpc;
 
 public class GrpcPresentationLayerAuthInterceptor : Interceptor
 {

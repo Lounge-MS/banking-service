@@ -1,9 +1,9 @@
 using BankingServiceProject.Exceptions;
-using BankingServiceProject.PresentationLayerProject.Grpc.Exceptions;
+using BankingServiceProject.PresentationLayerProject.Services.Grpc.Exceptions;
 using Grpc.Core;
 using Grpc.Core.Interceptors;
 
-namespace BankingServiceProject.PresentationLayerProject.Grpc;
+namespace BankingServiceProject.PresentationLayerProject.Services.Grpc;
 
 public class GrpcErrorHandlingInterceptor : Interceptor
 {

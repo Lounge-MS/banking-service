@@ -1,4 +1,4 @@
-namespace BankingServiceProject.PresentationLayerProject.Grpc.Exceptions;
+namespace BankingServiceProject.PresentationLayerProject.Services.Grpc.Exceptions;
 
 public class UnknownProviderException
     : GrpcPresentationLayerException

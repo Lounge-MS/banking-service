@@ -1,7 +1,7 @@
 using BankingServiceProject.CommonProject.Security.Secrets;
 using Microsoft.Extensions.Options;
 
-namespace BankingServiceProject.PresentationLayerProject.Grpc;
+namespace BankingServiceProject.PresentationLayerProject.Services.Grpc;
 
 public class TokenValidator
 {
