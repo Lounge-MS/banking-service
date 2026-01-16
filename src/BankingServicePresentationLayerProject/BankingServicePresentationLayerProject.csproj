@@ -6,21 +6,28 @@
     </PropertyGroup>
     <ItemGroup>
         <ProjectReference Include="../BankingServiceProject/BankingServiceProject.csproj" />
-        <ProjectReference Include="../BankingServiceRepostoryProject/BankingServiceRepostoryProject.csproj" />
+        <ProjectReference Include="../BankingServiceInfrastructureProject/BankingServiceInfrastructureProject.csproj" />
     </ItemGroup>
     <ItemGroup>
+        <PackageReference Include="DotNetEnv" />
         <PackageReference Include="Google.Protobuf" />
         <PackageReference Include="Grpc.AspNetCore" />
         <PackageReference Include="Grpc.Tools">
             <PrivateAssets>all</PrivateAssets>
             <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
         </PackageReference>
+        <PackageReference Include="Itmo.Dev.Platform.Kafka" />
     </ItemGroup>
     <ItemGroup>
         <Protobuf Include="Protos\*.proto" GrpcServices="Server" />
+        <Protobuf Include="Protos\Kafka\*.proto" GrpcServices="None" />
     </ItemGroup>
     <ItemGroup>
         <None Include="example.env" CopyToOutputDirectory="PreserveNewest" />
         <None Include="appsettings.json" CopyToOutputDirectory="PreserveNewest" />
+    </ItemGroup>
+    <ItemGroup>
+      <Folder Include="Brokers\" />
+      <Folder Include="Services\" />
     </ItemGroup>
 </Project>

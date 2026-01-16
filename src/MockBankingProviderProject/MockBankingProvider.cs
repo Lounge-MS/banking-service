@@ -1,5 +1,5 @@
-using BankingServiceProject.MockBankingProviderProject.Domain;
-using BankingServiceProject.MockBankingProviderProject.Domain.Payments;
+using BankingServiceProject.MockBankingProviderProject.Entities;
+using BankingServiceProject.MockBankingProviderProject.Entities.Payments;
 using BankingServiceProject.MockBankingProviderProject.Exceptions;
 using Microsoft.Extensions.Options;
 using System.Collections.Concurrent;

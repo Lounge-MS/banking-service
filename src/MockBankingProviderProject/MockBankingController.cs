@@ -1,4 +1,4 @@
-using BankingServiceProject.MockBankingProviderProject.Domain;
+using BankingServiceProject.MockBankingProviderProject.Entities;
 using Microsoft.AspNetCore.Mvc;
 
 namespace BankingServiceProject.MockBankingProviderProject;

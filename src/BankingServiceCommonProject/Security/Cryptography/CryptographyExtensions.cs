@@ -7,6 +7,6 @@ public static class CryptographyExtensions
     public static IServiceCollection AddAesEncryptor(
         this IServiceCollection serviceCollection)
     {
-        return serviceCollection.AddSingleton<AesEncryptor>();
+        return serviceCollection.AddScoped<AesEncryptor>();
     }
 }

@@ -11,56 +11,61 @@ services:
       POSTGRES_USER: "postgres"
       POSTGRES_PASSWORD: "postgres"
     volumes:
-      - bank-data:/data/postgres
+      - bank-pg-data:/data/postgres
     healthcheck:
       test: [ "CMD-SHELL", "pg_isready -U postgres" ]
       interval: 5s
       timeout: 3s
       retries: 5
+      
+  bank-zookeeper:
+    container_name: bank-zookeeper
+    image: wurstmeister/zookeeper:latest
+    restart: unless-stopped
+    environment:
+      - ALLOW_ANONYMOUS_LOGIN=yes
+    networks:
+      - bank-network
 
   bank-kafka:
     container_name: bank-kafka
-    image: apache/kafka:latest
-    networks:
-      - bank-network
-    ports:
-      - "9094:9094"
+    image: wurstmeister/kafka:latest
+    restart: unless-stopped
     environment:
-      KAFKA_NODE_ID: 1
-      KAFKA_PROCESS_ROLES: broker,controller
-      KAFKA_LISTENERS: INTERNAL://0.0.0.0:9092,EXTERNAL://0.0.0.0:9094,CONTROLLER://0.0.0.0:9093
-      KAFKA_ADVERTISED_LISTENERS: INTERNAL://bank-kafka:9092,EXTERNAL://localhost:9094
+      KAFKA_LOG_DIRS: /kafka-data
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: bank-zookeeper:2181
       KAFKA_INTER_BROKER_LISTENER_NAME: INTERNAL
-      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
-      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: INTERNAL:PLAINTEXT,EXTERNAL:PLAINTEXT,CONTROLLER:PLAINTEXT
-      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@localhost:9093
-      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
-      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
-      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
-      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
-      KAFKA_NUM_PARTITIONS: 3
+      KAFKA_LISTENERS: EXTERNAL://:9092,INTERNAL://:9094
+      KAFKA_ADVERTISED_LISTENERS: EXTERNAL://127.0.0.1:9092,INTERNAL://bank-kafka:9094
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: EXTERNAL:PLAINTEXT,INTERNAL:PLAINTEXT
+      ALLOW_PLAINTEXT_LISTENER: yes
       KAFKA_CREATE_TOPICS: >
         CheckClosedEvent:1:1,
+    depends_on:
+      - bank-zookeeper
+    networks:
+      - bank-network
     volumes:
-      - bank-checks-kafka-data:/kafka-data
+      - bank-kafka-data:/kafka-data
+    ports:
+      - '9092:9092'
 
   bank-kafka-ui:
     container_name: bank-kafka-ui
     image: provectuslabs/kafka-ui:latest
     networks:
       - bank-network
-    build:
-      context: .
     restart: unless-stopped
     depends_on:
       - bank-kafka
     ports:
       - "8082:8080"
     volumes:
-      - ./src/BankingServiceProject/Protos:/schemas
+      - ./src/BankingServicePresentationLayerProject/Protos:/schemas
     environment:
       kafka.clusters.0.name: bank-kafka
-      kafka.clusters.0.bootstrapServers: bank-kafka:9092
+      kafka.clusters.0.bootstrapServers: bank-kafka:9094
       kafka.clusters.0.defaultKeySerde: ProtobufFile
       kafka.clusters.0.defaultValueSerde: ProtobufFile
 
@@ -92,7 +97,7 @@ services:
     environment:
       BankingProviders__Mock__BaseUrl: "http://mock-banking-provider:8081"
       BankingService__WebhookBaseUrl: "http://banking-service:8079/reply"
-      Kafka__Host: "bank-kafka:9092"
+      Kafka__Host: "bank-kafka:9094"
       MOCK_IDENTITY_TOKEN: "identity-token"
       MOCK_ENCRYPTION: "50dgbqH4InrjIyLeJDEAsOHkOy28K5cNfERguI63tXc="
       POSTGRES_CONNECTION_STRING: "Host=bank-postgres;Port=5432;Database=postgres;Username=postgres;Password=postgres"
@@ -108,5 +113,5 @@ networks:
     driver: bridge
 
 volumes:
-  bank-checks-kafka-data:
-  bank-data:
+  bank-kafka-data:
+  bank-pg-data:

@@ -1,51 +1,43 @@
-using BankingServiceProject.Domain;
+using BankingServiceProject.Entities;
+using BankingServiceProject.Entities.Dto;
 using BankingServiceProject.Exceptions;
-using BankingServiceProject.ProviderStrategies;
-using BankingServiceProject.RepositoryProject.Domain;
-using BankingServiceProject.RepositoryProject.Exceptions;
-using BankingServiceProject.RepositoryProject.Repositories;
-using GrpcBankingService.Kafka;
-using Itmo.Dev.Platform.Kafka.Producer;
+using BankingServiceProject.Ports.BrokerProducers;
+using BankingServiceProject.Ports.Repositories;
+using BankingServiceProject.Ports.Services;
+using BankingServiceProject.Ports.Strategies;
 using Microsoft.Extensions.Options;
 using System.Text.Json;
 using System.Transactions;
 
 namespace BankingServiceProject;
 
-public class BankingService
+public class BankingService : IBankingService, IWebhookService
 {
-    private readonly OperationsRepository _operationsRepository;
-    private readonly BankingProviderStrategySelector _selector;
-    private readonly IKafkaMessageProducer<ClosedCheckKey, ClosedCheckValue> _producer;
+    private readonly IOperationsRepository _operationsRepository;
+    private readonly IBankingProviderStrategySelector _selector;
+    private readonly IBrokerProducer<ClosedCheckKey, ClosedCheckValue> _brokerProducer;
     private readonly JsonSerializerOptions _jsonOptions;
     private readonly BankingServiceOptions _options;
 
     public BankingService(
-        OperationsRepository operationsRepository,
-        BankingProviderStrategySelector selector,
-        IKafkaMessageProducer<ClosedCheckKey, ClosedCheckValue> producer,
+        IOperationsRepository operationsRepository,
+        IBankingProviderStrategySelector selector,
+        IBrokerProducer<ClosedCheckKey, ClosedCheckValue> brokerProducer,
         JsonSerializerOptions jsonOptions,
         IOptionsMonitor<BankingServiceOptions> options)
     {
         _operationsRepository = operationsRepository;
         _selector = selector;
-        _producer = producer;
+        _brokerProducer = brokerProducer;
         _jsonOptions = jsonOptions;
         _options = options.CurrentValue;
     }
 
-    public async Task<OperationEntity> GetPaymentAsync(
+    public Task<OperationEntity> GetPaymentAsync(
         string paymentId,
         CancellationToken cancellationToken = default)
     {
-        try
-        {
-            return await _operationsRepository.GetOperationAsync(paymentId, cancellationToken);
-        }
-        catch (EmptyReaderException)
-        {
-            throw new EntityNotFoundException();
-        }
+        return _operationsRepository.GetOperationAsync(paymentId, cancellationToken);
     }
 
     public async Task<OperationEntity> CreatePaymentAsync(
@@ -57,34 +49,27 @@ public class BankingService
         string id = Guid.NewGuid().ToString();
         try
         {
-            try
-            {
-                IBankingProviderStrategy strategy = _selector.GetStrategy(bankingProviderType);
-                PaymentCreationResponse creationResponse = await strategy
-                    .StartPaymentAsync(id, amount, _options.WebhookBaseUrl, cancellationToken);
+            IBankingProviderStrategy strategy = _selector.GetStrategy(bankingProviderType);
+            PaymentCreationResponse creationResponse = await strategy
+                .StartPaymentAsync(id, amount, _options.WebhookBaseUrl, cancellationToken);
 
-                OperationEntity operation = await _operationsRepository.CreateOperationAsync(
-                    id,
-                    idempotencyKey,
-                    creationResponse.Metainfo.Serialize(_jsonOptions),
-                    new Uri(creationResponse.ConfirmationUrl),
-                    amount,
-                    BankingProviderType.Mock,
-                    cancellationToken);
+            OperationEntity operation = await _operationsRepository.CreateOperationAsync(
+                id,
+                idempotencyKey,
+                creationResponse.Metainfo.Serialize(_jsonOptions),
+                new Uri(creationResponse.ConfirmationUrl),
+                amount,
+                BankingProviderType.Mock,
+                cancellationToken);
 
-                return operation;
-            }
-            catch (IdempotencyKeyConflictException)
-            {
-                return await _operationsRepository
-                    .GetOperationByIdempotencyKeyAsync(
-                        idempotencyKey,
-                        cancellationToken);
-            }
+            return operation;
         }
-        catch (EmptyReaderException)
+        catch (IdempotencyKeyConflictException)
         {
-            throw new EntityNotFoundException();
+            return await _operationsRepository
+                .GetOperationByIdempotencyKeyAsync(
+                    idempotencyKey,
+                    cancellationToken);
         }
     }
 
@@ -100,67 +85,25 @@ public class BankingService
         PaymentCompletionMessage message =
             await strategy.ValidateAndParseRequestAsync(paymentId, request, cancellationToken);
 
-        OperationEntity msg;
-        try
-        {
-            msg = await _operationsRepository.UpdateStatusAsync(paymentId, message.Status, cancellationToken);
-        }
-        catch (EmptyReaderException)
-        {
-            throw new EntityNotFoundException();
-        }
-
-        IAsyncEnumerable<KafkaProducerMessage<ClosedCheckKey, ClosedCheckValue>> flow =
-            new KafkaProducerMessage<ClosedCheckKey, ClosedCheckValue>(
-                    new ClosedCheckKey
-                    {
-                        PaymentId = paymentId,
-                    },
-                    new ClosedCheckValue
-                    {
-                        PaymentId = paymentId,
-                        Status = ToGrpcStatus(msg.Status),
-                    })
-                .CreateAsyncEnumerable();
-
-        await _producer.ProduceAsync(flow, cancellationToken);
+        OperationEntity msg = await _operationsRepository.UpdateStatusAsync(paymentId, message.Status, cancellationToken);
+        await _brokerProducer.ProduceAsync(msg.ToBrokerMessage(), cancellationToken);
     }
 
     public async Task MarkCompensatedAsync(
         string paymentId,
         CancellationToken cancellationToken = default)
     {
-        try
+        OperationEntity operation = await _operationsRepository.GetOperationAsync(paymentId, cancellationToken);
+        if (operation.Status != OperationStatus.Completed)
         {
-            OperationEntity operation = await _operationsRepository.GetOperationAsync(paymentId, cancellationToken);
-            if (operation.Status != OperationStatus.Completed)
-            {
-                throw new InvalidStateException(
-                    nameof(OperationStatus.Cancelled),
-                    nameof(operation.Status));
-            }
-
-            await _operationsRepository.UpdateStatusAsync(
-                paymentId,
-                OperationStatus.Compensated,
-                cancellationToken);
+            throw new InvalidStateException(
+                nameof(OperationStatus.Cancelled),
+                nameof(operation.Status));
         }
-        catch (EmptyReaderException)
-        {
-            throw new EntityNotFoundException();
-        }
-    }
 
-    private static PaymentStatus ToGrpcStatus(OperationStatus status)
-    {
-        return status switch
-        {
-            OperationStatus.Completed => PaymentStatus.Completed,
-            OperationStatus.Cancelled => PaymentStatus.Cancelled,
-            OperationStatus.Created or OperationStatus.Compensated or _ =>
-                throw new ArgumentOutOfRangeException(
-                    nameof(status),
-                    "Impossible state in current context"),
-        };
+        await _operationsRepository.UpdateStatusAsync(
+            paymentId,
+            OperationStatus.Compensated,
+            cancellationToken);
     }
 }

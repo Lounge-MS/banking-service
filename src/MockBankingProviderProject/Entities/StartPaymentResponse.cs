@@ -1,0 +1,13 @@
+using BankingServiceProject.MockBankingProviderProject.Entities.Payments;
+
+namespace BankingServiceProject.MockBankingProviderProject.Entities;
+
+public record StartPaymentResponse(
+    string Id,
+    string IdentityToken)
+{
+    public static StartPaymentResponse FromPayment(MockPayment payment)
+    {
+        return new StartPaymentResponse(payment.Id, payment.IdentityToken);
+    }
+}

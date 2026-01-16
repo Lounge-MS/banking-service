@@ -9,7 +9,7 @@ public static class CacheExtensions
         this IServiceCollection serviceCollection)
     {
         return serviceCollection
-            .AddSingleton<IMemoryCache, MemoryCache>()
-            .AddSingleton<CacheStorage<T>>();
+            .AddScoped<IMemoryCache, MemoryCache>()
+            .AddScoped<CacheStorage<T>>();
     }
 }
