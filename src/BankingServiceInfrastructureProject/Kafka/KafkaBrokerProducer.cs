@@ -4,7 +4,7 @@ using Itmo.Dev.Platform.Kafka.Producer;
 using ClosedCheckKeyProto = GrpcBankingService.Kafka.ClosedCheckKey;
 using ClosedCheckValueProto = GrpcBankingService.Kafka.ClosedCheckValue;
 
-namespace BankingServiceProject.PresentationLayerProject.Brokers.Kafka;
+namespace BankingServiceProject.InfrastructureLayerProject.Kafka;
 
 public class KafkaBrokerProducer : IBrokerProducer<ClosedCheckKey, ClosedCheckValue>
 {

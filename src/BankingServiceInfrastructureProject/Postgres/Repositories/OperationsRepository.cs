@@ -5,7 +5,7 @@ using BankingServiceProject.Ports.Repositories;
 using Npgsql;
 using NpgsqlTypes;
 
-namespace BankingServiceProject.RepositoryProject.Postgres.Repositories;
+namespace BankingServiceProject.InfrastructureLayerProject.Postgres.Repositories;
 
 public class OperationsRepository : IOperationsRepository
 {

@@ -1,6 +1,6 @@
 using FluentMigrator;
 
-namespace BankingServiceProject.RepositoryProject.Postgres.Migrations;
+namespace BankingServiceProject.InfrastructureLayerProject.Postgres.Migrations;
 
 [Migration(2026011002)]
 public class CreateOperationsTable : Migration

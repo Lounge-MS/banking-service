@@ -1,10 +1,12 @@
 using BankingServiceProject.Entities;
 using BankingServiceProject.Ports.BrokerProducers;
 using Itmo.Dev.Platform.Kafka.Extensions;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
 using ClosedCheckKeyProto = GrpcBankingService.Kafka.ClosedCheckKey;
 using ClosedCheckValueProto = GrpcBankingService.Kafka.ClosedCheckValue;
 
-namespace BankingServiceProject.PresentationLayerProject.Brokers.Kafka;
+namespace BankingServiceProject.InfrastructureLayerProject.Kafka;
 
 public static class BankingServicePresentationKafkaDiExtensions
 {

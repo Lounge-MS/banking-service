@@ -2,7 +2,7 @@ using BankingServiceProject.Entities;
 using Npgsql;
 using System.Text.Json;
 
-namespace BankingServiceProject.RepositoryProject.Postgres;
+namespace BankingServiceProject.InfrastructureLayerProject.Postgres;
 
 public static class MappingExtensions
 {

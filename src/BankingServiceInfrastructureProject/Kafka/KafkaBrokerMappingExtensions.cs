@@ -4,7 +4,7 @@ using ClosedCheckKeyProto = GrpcBankingService.Kafka.ClosedCheckKey;
 using ClosedCheckValueProto = GrpcBankingService.Kafka.ClosedCheckValue;
 using PaymentStatusProto = GrpcBankingService.Kafka.PaymentStatus;
 
-namespace BankingServiceProject.PresentationLayerProject.Brokers.Kafka;
+namespace BankingServiceProject.InfrastructureLayerProject.Kafka;
 
 public static class KafkaBrokerMappingExtensions
 {

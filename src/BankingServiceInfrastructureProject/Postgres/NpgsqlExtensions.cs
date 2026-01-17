@@ -1,7 +1,7 @@
 using BankingServiceProject.Exceptions;
 using Npgsql;
 
-namespace BankingServiceProject.RepositoryProject.Postgres;
+namespace BankingServiceProject.InfrastructureLayerProject.Postgres;
 
 public static class NpgsqlExtensions
 {

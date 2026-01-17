@@ -1,10 +1,10 @@
 using BankingServiceProject;
 using BankingServiceProject.CommonProject.Security.Cryptography;
 using BankingServiceProject.CommonProject.Security.Secrets;
-using BankingServiceProject.PresentationLayerProject.Brokers.Kafka;
+using BankingServiceProject.InfrastructureLayerProject;
+using BankingServiceProject.InfrastructureLayerProject.Kafka;
 using BankingServiceProject.PresentationLayerProject.Services.Grpc;
 using BankingServiceProject.PresentationLayerProject.Webhooks.Rest;
-using BankingServiceProject.RepositoryProject;
 using DotNetEnv;
 
 WebApplicationBuilder builder = WebApplication.CreateBuilder();

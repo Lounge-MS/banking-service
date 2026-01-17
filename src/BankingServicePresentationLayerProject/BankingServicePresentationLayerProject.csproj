@@ -16,18 +16,18 @@
             <PrivateAssets>all</PrivateAssets>
             <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
         </PackageReference>
-        <PackageReference Include="Itmo.Dev.Platform.Kafka" />
     </ItemGroup>
     <ItemGroup>
-        <Protobuf Include="Protos\*.proto" GrpcServices="Server" />
-        <Protobuf Include="Protos\Kafka\*.proto" GrpcServices="None" />
+        <Protobuf Include="..\..\Protos\*.proto" GrpcServices="Server" />
     </ItemGroup>
     <ItemGroup>
         <None Include="example.env" CopyToOutputDirectory="PreserveNewest" />
         <None Include="appsettings.json" CopyToOutputDirectory="PreserveNewest" />
+        <None Update=".env">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
     </ItemGroup>
     <ItemGroup>
-      <Folder Include="Brokers\" />
       <Folder Include="Services\" />
     </ItemGroup>
 </Project>

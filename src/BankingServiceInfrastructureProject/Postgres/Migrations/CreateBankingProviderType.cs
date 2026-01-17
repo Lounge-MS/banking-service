@@ -1,6 +1,6 @@
 using FluentMigrator;
 
-namespace BankingServiceProject.RepositoryProject.Postgres.Migrations;
+namespace BankingServiceProject.InfrastructureLayerProject.Postgres.Migrations;
 
 [Migration(2026011001)]
 public class CreateBankingProviderType : Migration

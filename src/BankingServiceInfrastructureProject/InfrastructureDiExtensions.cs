@@ -1,13 +1,13 @@
 using BankingServiceProject.CommonProject.Cache;
 using BankingServiceProject.Entities;
+using BankingServiceProject.InfrastructureLayerProject.Postgres.Migrations;
+using BankingServiceProject.InfrastructureLayerProject.Postgres.Repositories;
 using BankingServiceProject.Ports.Repositories;
-using BankingServiceProject.RepositoryProject.Postgres.Migrations;
-using BankingServiceProject.RepositoryProject.Postgres.Repositories;
 using FluentMigrator.Runner;
 using Microsoft.Extensions.DependencyInjection;
 using Npgsql;
 
-namespace BankingServiceProject.RepositoryProject;
+namespace BankingServiceProject.InfrastructureLayerProject;
 
 public static class InfrastructureDiExtensions
 {
