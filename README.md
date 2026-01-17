@@ -1,1 +1,1 @@
-﻿![spider-man](./readme-pic.jpg)
+﻿![supr-man](./readme-pic.jpg)

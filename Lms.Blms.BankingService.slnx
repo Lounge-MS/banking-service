@@ -1,7 +1,9 @@
 ﻿<Solution>
-  <Folder Name="/src/" />
-  <Folder Name="/tests/">
-    <Project Path="tests\BankingService.Tests.csproj" Type="Classic C#" />
+  <Folder Name="/src/">
+    <Project Path="src\BankingServiceCommonProject\BankingServiceCommonProject.csproj" Type="Classic C#" />
+    <Project Path="src\BankingServiceInfrastructureProject\BankingServiceInfrastructureProject.csproj" Type="Classic C#" />
+    <Project Path="src\BankingServicePresentationLayerProject\BankingServicePresentationLayerProject.csproj" Type="Classic C#" />
+    <Project Path="src\BankingServiceProject\BankingServiceProject.csproj" Type="Classic C#" />
+    <Project Path="src\MockBankingProviderProject\MockBankingProviderProject.csproj" Type="Classic C#" />
   </Folder>
-  <Project Path="src\BankingServiceProject\BankingServiceProject.csproj" Type="Classic C#" />
 </Solution>

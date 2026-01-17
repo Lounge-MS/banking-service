@@ -1,7 +1,13 @@
-<Project Sdk="Microsoft.NET.Sdk.Web">
+<Project Sdk="Microsoft.NET.Sdk">
     <PropertyGroup>
         <TargetFramework>net9.0</TargetFramework>
         <Nullable>enable</Nullable>
         <RootNamespace>BankingServiceProject</RootNamespace>
     </PropertyGroup>
+    <ItemGroup>
+        <ProjectReference Include="..\BankingServiceCommonProject\BankingServiceCommonProject.csproj" />
+    </ItemGroup>
+    <ItemGroup>
+      <PackageReference Include="Refit.HttpClientFactory" />
+    </ItemGroup>
 </Project>
